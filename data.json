@@ -1,0 +1,56 @@
+{
+  "attendees": [
+    {
+      "id": "MAgRbI5jxRZHGOrYl9dD5",
+      "name": "Eric Immermann",
+      "startingAddress": "25 Lenox Avenue Ridgewood, 07450 New Jersey",
+      "arrivalDate": "2025-09-11",
+      "departureDate": "2025-09-14",
+      "location": {
+        "lat": 40.9763193,
+        "lng": -74.1240522
+      },
+      "createdAt": "2025-08-07T20:33:44.660Z"
+    },
+    {
+      "id": "b8bThC0hBKbA-1J0k87mG",
+      "name": "Rob Lucia",
+      "startingAddress": "121 Conklin Avenue Hillsdale, 07642 New Jersey",
+      "arrivalDate": "2025-09-11",
+      "departureDate": "2025-09-14",
+      "location": {
+        "lat": 41.0060828,
+        "lng": -74.0353515
+      },
+      "createdAt": "2025-08-07T20:34:29.199Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "nMNh0-6ghT1dW8JuKwvXx",
+      "description": "House",
+      "amount": 5000,
+      "payerId": "b8bThC0hBKbA-1J0k87mG",
+      "beneficiaryIds": [
+        "MAgRbI5jxRZHGOrYl9dD5",
+        "b8bThC0hBKbA-1J0k87mG"
+      ],
+      "paidByBeneficiary": {},
+      "date": "2025-08-07",
+      "createdAt": "2025-08-07T20:57:51.191Z"
+    },
+    {
+      "id": "X1IDhdqevPoc976cT-yzh",
+      "description": "Food",
+      "amount": 300,
+      "payerId": "MAgRbI5jxRZHGOrYl9dD5",
+      "beneficiaryIds": [
+        "MAgRbI5jxRZHGOrYl9dD5",
+        "b8bThC0hBKbA-1J0k87mG"
+      ],
+      "paidByBeneficiary": {},
+      "date": "2025-08-07",
+      "createdAt": "2025-08-07T21:22:29.190Z"
+    }
+  ]
+}

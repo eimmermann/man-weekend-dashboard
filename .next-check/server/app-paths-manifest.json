@@ -1,0 +1,9 @@
+{
+  "/api/attendees/route": "app/api/attendees/route.js",
+  "/api/attendees/[id]/route": "app/api/attendees/[id]/route.js",
+  "/api/expenses/route": "app/api/expenses/route.js",
+  "/api/geocode/route": "app/api/geocode/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js"
+}
