@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Allow building to an alternate output directory so production builds
   // don’t clobber the dev server’s .next artifacts
-  distDir: process.env.NEXT_DIST_DIR || '.next',
+  // On Vercel, always use the default .next directory so the platform can find manifests
+  distDir: process.env.VERCEL ? '.next' : (process.env.NEXT_DIST_DIR || '.next'),
   images: {
     remotePatterns: [
       {
