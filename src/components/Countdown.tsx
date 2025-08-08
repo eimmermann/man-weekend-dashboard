@@ -17,9 +17,13 @@ function secondsToParts(total: number) {
 
 export default function Countdown() {
   const [now, setNow] = useState(() => new Date());
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   const start = useMemo(() => new Date(TRIP_START_ISO), []);
@@ -80,7 +84,7 @@ export default function Countdown() {
           const value = [parts.days, parts.hours, parts.minutes, parts.seconds][idx];
           return (
             <div key={label} className="rounded-xl bg-zinc-50 dark:bg-white/10 backdrop-blur px-3 py-4">
-              <div className="text-3xl font-bold tabular-nums">{value}</div>
+              <div className="text-3xl font-bold tabular-nums" suppressHydrationWarning>{mounted ? value : 0}</div>
               <div className="text-xs uppercase tracking-wide opacity-70">{label}</div>
             </div>
           );
