@@ -419,7 +419,7 @@ function EditForm({ attendee, onClose, onSaved }: { attendee: import('@/types').
     if (!name.trim() || !address.trim()) return;
     setSaving(true);
     try {
-      const body: any = { name, startingAddress: address, arrivalDate: arrivalDate || undefined, departureDate: departureDate || undefined };
+      const body = { name, startingAddress: address, arrivalDate: arrivalDate || undefined, departureDate: departureDate || undefined };
       await fetch(`/api/attendees/${attendee.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       onSaved();
     } finally {
