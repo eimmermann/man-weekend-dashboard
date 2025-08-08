@@ -18,7 +18,7 @@ export default function RandomPicker() {
   const [rotateY, setRotateY] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
   const [wheelFaces, setWheelFaces] = useState<{ id: string; name: string }[]>([]);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
 
   // Initialize selected attendees when attendees data loads
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function RandomPicker() {
       cancelAnimationFrame(animationRef.current);
     }
     setIsPicking(false);
-    setIsSpinning(false);
+    setIsRolling(false);
   };
 
   const toggleAttendee = (attendeeId: string) => {
