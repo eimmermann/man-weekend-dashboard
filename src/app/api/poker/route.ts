@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { listPokerGames, createPokerGame, updatePokerGameStatus, deletePokerGame, computePokerSettlement } from '@/lib/db';
-import { createExpense } from '@/lib/db';
+import { createExpense, deleteExpensesByDescriptionAndDate } from '@/lib/db';
 
 const createSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -54,15 +54,26 @@ export async function PATCH(req: NextRequest) {
         ? ` ${(updated as unknown as { time?: string }).time as string}`
         : '';
       const descBase = `Poker: ${updated.date}${timePart}`;
+      // Remove previous settlement expenses for this game/date to avoid duplicates
+      await deleteExpensesByDescriptionAndDate(descBase, updated.date);
+      // Create new expenses with correct direction: creditor pays debtor (so the payer is the positive net person)
       for (const t of transfers) {
         await createExpense({
-          description: `${descBase}`,
+          description: descBase,
           amount: Number(t.amount),
-          payerId: t.fromAttendeeId,
-          beneficiaryIds: [t.toAttendeeId],
+          payerId: t.toAttendeeId,
+          beneficiaryIds: [t.fromAttendeeId],
           date: updated.date,
         });
       }
+    }
+    // When reopening a game, delete prior settlement expenses for that game/date
+    if (status === 'active') {
+      const timePart = typeof (updated as unknown as { time?: string }).time === 'string' && (updated as unknown as { time?: string }).time
+        ? ` ${(updated as unknown as { time?: string }).time as string}`
+        : '';
+      const descBase = `Poker: ${updated.date}${timePart}`;
+      await deleteExpensesByDescriptionAndDate(descBase, updated.date);
     }
     return NextResponse.json(updated);
   } catch (e) {
