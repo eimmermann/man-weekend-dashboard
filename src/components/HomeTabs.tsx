@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 import PokemonOfTheDay from '@/components/PokemonOfTheDay';
 import StuffTracker from '@/components/StuffTracker';
 import PickleballTracker from '@/components/PickleballTracker';
+import RandomPicker from '@/components/RandomPicker';
 
 type TabKey = 'planning' | 'weekend' | 'bill';
 
@@ -40,6 +41,7 @@ export default function HomeTabs() {
 
       {tab === 'weekend' && (
         <div className="space-y-6">
+          <RandomPicker />
           <PickleballTracker />
         </div>
       )}
