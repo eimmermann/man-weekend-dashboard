@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { upsertPokerPlayer, removePokerPlayer } from '@/lib/db';
 
@@ -10,12 +10,13 @@ const upsertSchema = z.object({
   status: z.enum(['active', 'finished']).optional(),
 });
 
-export async function POST(req: NextRequest, { params }: { params: { gameId: string } }) {
+export async function POST(req: Request, context: { params: any }) {
   try {
+    const { gameId } = await context.params;
     const body = await req.json();
     const parsed = upsertSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
-    const saved = await upsertPokerPlayer(params.gameId, parsed.data);
+    const saved = await upsertPokerPlayer(gameId, parsed.data);
     return NextResponse.json(saved);
   } catch (e) {
     console.error('Upsert poker player error', e);
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: { gameId: str
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id') || '';

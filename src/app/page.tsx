@@ -1,5 +1,6 @@
 import Countdown from '@/components/Countdown';
 import HomeTabs from '@/components/HomeTabs';
+import { Suspense } from 'react';
 
 export default function Home() {
   return (
@@ -8,7 +9,9 @@ export default function Home() {
         <div className="flex flex-col md:flex-row gap-6 items-stretch">
           <div className="flex-1"><Countdown /></div>
         </div>
-        <HomeTabs />
+        <Suspense>
+          <HomeTabs />
+        </Suspense>
       </div>
     </div>
   );

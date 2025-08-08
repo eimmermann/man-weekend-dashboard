@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { listPokerGames, createPokerGame, updatePokerGameStatus, deletePokerGame } from '@/lib/db';
+import { listPokerGames, createPokerGame, updatePokerGameStatus, deletePokerGame, computePokerSettlement } from '@/lib/db';
+import { createExpense } from '@/lib/db';
 
 const createSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -45,6 +46,24 @@ export async function PATCH(req: NextRequest) {
     }
     const updated = await updatePokerGameStatus(id, status);
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    // When marking a game as finished, auto-create settlement expenses efficiently
+    if (status === 'finished') {
+      const balances = updated.players.map(p => ({ attendeeId: p.attendeeId, net: Number(p.cashOut) - Number(p.buyIn) }));
+      const transfers = computePokerSettlement(balances);
+      const timePart = typeof (updated as unknown as { time?: string }).time === 'string' && (updated as unknown as { time?: string }).time
+        ? ` ${(updated as unknown as { time?: string }).time as string}`
+        : '';
+      const descBase = `Poker: ${updated.date}${timePart}`;
+      for (const t of transfers) {
+        await createExpense({
+          description: `${descBase}`,
+          amount: Number(t.amount),
+          payerId: t.fromAttendeeId,
+          beneficiaryIds: [t.toAttendeeId],
+          date: updated.date,
+        });
+      }
+    }
     return NextResponse.json(updated);
   } catch (e) {
     console.error('Update poker game status error', e);

@@ -34,6 +34,14 @@
         "nxtPid": "nxtPid"
       },
       "namedRegex": "^/api/pickleball/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/poker/[gameId]/players",
+      "regex": "^/api/poker/([^/]+?)/players(?:/)?$",
+      "routeKeys": {
+        "nxtPgameId": "nxtPgameId"
+      },
+      "namedRegex": "^/api/poker/(?<nxtPgameId>[^/]+?)/players(?:/)?$"
     }
   ],
   "staticRoutes": [

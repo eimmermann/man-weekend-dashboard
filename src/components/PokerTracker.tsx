@@ -60,7 +60,7 @@ export default function PokerTracker() {
       const mm = String(now.getMinutes()).padStart(2, '0');
       setTime(`${hh}:${mm}`);
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, date]);
 
   const createGame = async () => {
     if (!date || rows.length === 0) return;
@@ -85,8 +85,8 @@ export default function PokerTracker() {
   const gamesList: PokerGame[] = Array.isArray(games) ? games : [];
 
   function canGameBeFinished(game: PokerGame): boolean {
-    const allPlayersFinished = (game.players || []).every((p: any) => (p.status ?? 'active') === 'finished');
-    const totalNet = (game.players || []).reduce((sum: number, p: any) => sum + (Number(p.cashOut) - Number(p.buyIn)), 0);
+    const allPlayersFinished = (game.players || []).every((p) => (p as { status?: 'active' | 'finished' }).status === 'finished');
+    const totalNet = (game.players || []).reduce((sum: number, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
     const rounded = Math.round(totalNet * 100) / 100;
     return allPlayersFinished && rounded === 0;
   }
@@ -138,12 +138,12 @@ export default function PokerTracker() {
     // Prevent finishing if any player is still active
     const game = gamesList.find(g => g.id === gameId);
     if (!game) return;
-    const anyActive = game.players.some(p => (p as any).status !== 'finished');
+    const anyActive = game.players.some(p => (p as { status?: 'active' | 'finished' }).status !== 'finished');
     if (anyActive) {
       alert('All players must be finished before marking the game as finished.');
       return;
     }
-    const totalNet = game.players.reduce((sum, p: any) => sum + (Number(p.cashOut) - Number(p.buyIn)), 0);
+    const totalNet = game.players.reduce((sum, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
     const rounded = Math.round(totalNet * 100) / 100;
     if (rounded !== 0) {
       setFinishBlockModal({ amount: rounded });

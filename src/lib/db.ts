@@ -507,7 +507,7 @@ export async function listPokerGames(): Promise<PokerGame[]> {
     : [];
   const grouped: Record<string, PokerGamePlayer[]> = {};
   for (const p of players) {
-    const k = String((p as any).game_id);
+    const k = String((p as { game_id: string }).game_id);
     if (!grouped[k]) grouped[k] = [];
     grouped[k].push(mapPokerGamePlayerRow(p));
   }
