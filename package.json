@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
     "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
     "lowdb": "^7.0.1",

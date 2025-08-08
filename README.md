@@ -1,5 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database setup (Neon Postgres)
+
+This app persists data in Postgres using the `@neondatabase/serverless` driver and will auto-create the required tables on first run.
+
+1. Create a Neon project and database
+2. Copy your connection string
+3. Create a `.env.local` file in the project root and add:
+
+```
+DATABASE_URL="postgres://user:password@host:port/db?sslmode=require"
+```
+
 ## Getting Started
 
 First, run the development server:

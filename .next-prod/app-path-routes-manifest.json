@@ -1,0 +1,9 @@
+{
+  "/api/attendees/[id]/route": "/api/attendees/[id]",
+  "/api/expenses/route": "/api/expenses",
+  "/api/attendees/route": "/api/attendees",
+  "/api/geocode/route": "/api/geocode",
+  "/favicon.ico/route": "/favicon.ico",
+  "/_not-found/page": "/_not-found",
+  "/page": "/"
+}
