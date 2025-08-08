@@ -450,3 +450,144 @@ export async function deletePickleballGame(gameId: string): Promise<boolean> {
   `;
   return Array.isArray(result) && result.length > 0;
 }
+
+// -----------------------
+// Poker tracker
+// -----------------------
+
+export type PokerGame = {
+  id: string;
+  date: string;
+  time?: string;
+  status: 'active' | 'finished';
+  createdAt: string;
+  players: PokerGamePlayer[];
+};
+
+export type PokerGamePlayer = {
+  id: string;
+  gameId: string;
+  attendeeId: string;
+  buyIn: number;
+  cashOut: number;
+  status: 'active' | 'finished';
+};
+
+type PokerGameRow = { id: string; date: string; time: string | null; status: string; created_at: string };
+type PokerGamePlayerRow = { id: string; game_id: string; attendee_id: string; buy_in: string | number; cash_out: string | number; status: string };
+
+function mapPokerGameRow(row: PokerGameRow): { id: string; date: string; time?: string; status: 'active' | 'finished'; createdAt: string } {
+  return {
+    id: String(row.id),
+    date: new Date(String(row.date)).toISOString().split('T')[0],
+    time: row.time ? String(row.time) : undefined,
+    status: (String(row.status).toLowerCase() === 'finished' ? 'finished' : 'active'),
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+function mapPokerGamePlayerRow(row: PokerGamePlayerRow): PokerGamePlayer {
+  return {
+    id: String(row.id),
+    gameId: String(row.game_id),
+    attendeeId: String(row.attendee_id),
+    buyIn: Number(row.buy_in),
+    cashOut: Number(row.cash_out),
+    status: (String(row.status).toLowerCase() === 'finished' ? 'finished' : 'active'),
+  };
+}
+
+export async function listPokerGames(): Promise<PokerGame[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const games = (await sql`select id, date, time, status, created_at from poker_games order by date desc, time desc nulls last, created_at desc`) as unknown as PokerGameRow[];
+  const gameIds = games.map(g => g.id);
+  const players = gameIds.length
+    ? ((await sql`select id, game_id, attendee_id, buy_in, cash_out, status from poker_game_players where game_id = any(${gameIds})`) as unknown as PokerGamePlayerRow[])
+    : [];
+  const grouped: Record<string, PokerGamePlayer[]> = {};
+  for (const p of players) {
+    const k = String((p as any).game_id);
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(mapPokerGamePlayerRow(p));
+  }
+  return games.map(g => ({ ...mapPokerGameRow(g), players: grouped[g.id] ?? [] }));
+}
+
+export async function createPokerGame(input: { date: string; time?: string; players: Array<{ attendeeId: string; buyIn: number; cashOut: number }> }): Promise<PokerGame> {
+  await ensureSchema();
+  const sql = getSql();
+  const id = nanoid();
+  await sql`insert into poker_games (id, date, time, status) values (${id}, ${input.date}, ${input.time || null}, 'active')`;
+  for (const p of input.players) {
+    const pid = nanoid();
+    await sql`insert into poker_game_players (id, game_id, attendee_id, buy_in, cash_out) values (${pid}, ${id}, ${p.attendeeId}, ${p.buyIn}, ${p.cashOut})`;
+  }
+  const rows = (await sql`select id, date, time, status, created_at from poker_games where id = ${id} limit 1`) as unknown as PokerGameRow[];
+  const players = (await sql`select id, game_id, attendee_id, buy_in, cash_out from poker_game_players where game_id = ${id}`) as unknown as PokerGamePlayerRow[];
+  return { ...mapPokerGameRow(rows[0]), players: players.map(mapPokerGamePlayerRow) };
+}
+
+export async function updatePokerGameStatus(gameId: string, status: 'active' | 'finished'): Promise<PokerGame | null> {
+  await ensureSchema();
+  const sql = getSql();
+  await sql`update poker_games set status = ${status} where id = ${gameId}`;
+  const rows = (await sql`select id, date, time, status, created_at from poker_games where id = ${gameId} limit 1`) as unknown as PokerGameRow[];
+  if (!rows.length) return null;
+  const players = (await sql`select id, game_id, attendee_id, buy_in, cash_out from poker_game_players where game_id = ${gameId}`) as unknown as PokerGamePlayerRow[];
+  return { ...mapPokerGameRow(rows[0]), players: players.map(mapPokerGamePlayerRow) };
+}
+
+export async function deletePokerGame(gameId: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  const res = await sql`delete from poker_games where id = ${gameId} returning id`;
+  return (res as unknown as { id: string }[]).length > 0;
+}
+
+export async function upsertPokerPlayer(gameId: string, player: { id?: string; attendeeId: string; buyIn: number; cashOut: number; status?: 'active' | 'finished' }): Promise<PokerGamePlayer> {
+  await ensureSchema();
+  const sql = getSql();
+  if (player.id) {
+    const rows = await sql`update poker_game_players set attendee_id = ${player.attendeeId}, buy_in = ${player.buyIn}, cash_out = ${player.cashOut}, status = ${player.status || 'active'} where id = ${player.id} returning id, game_id, attendee_id, buy_in, cash_out, status`;
+    return mapPokerGamePlayerRow((rows as unknown as PokerGamePlayerRow[])[0]);
+  }
+  const id = nanoid();
+  const rows = await sql`insert into poker_game_players (id, game_id, attendee_id, buy_in, cash_out, status) values (${id}, ${gameId}, ${player.attendeeId}, ${player.buyIn}, ${player.cashOut}, ${player.status || 'active'}) returning id, game_id, attendee_id, buy_in, cash_out, status`;
+  return mapPokerGamePlayerRow((rows as unknown as PokerGamePlayerRow[])[0]);
+}
+
+export async function removePokerPlayer(playerId: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  const res = await sql`delete from poker_game_players where id = ${playerId} returning id`;
+  return (res as unknown as { id: string }[]).length > 0;
+}
+
+export async function pokerSummaryByAttendee(): Promise<Array<{ attendeeId: string; net: number }>> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select attendee_id, sum(cash_out - buy_in)::float8 as net
+    from poker_game_players
+    group by attendee_id
+    order by attendee_id
+  `;
+  return (rows as unknown as Array<{ attendee_id: string; net: number }>).map(r => ({ attendeeId: String(r.attendee_id), net: Number(r.net) }));
+}
+
+export function computePokerSettlement(balances: Array<{ attendeeId: string; net: number }>): Array<{ fromAttendeeId: string; toAttendeeId: string; amount: number }> {
+  const creditors = balances.filter(b => b.net > 0).map(b => ({ id: b.attendeeId, amt: b.net })).sort((a, b) => b.amt - a.amt);
+  const debtors = balances.filter(b => b.net < 0).map(b => ({ id: b.attendeeId, amt: -b.net })).sort((a, b) => b.amt - a.amt);
+  const transfers: Array<{ fromAttendeeId: string; toAttendeeId: string; amount: number }> = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const pay = Math.min(debtors[i].amt, creditors[j].amt);
+    transfers.push({ fromAttendeeId: debtors[i].id, toAttendeeId: creditors[j].id, amount: Number(pay.toFixed(2)) });
+    debtors[i].amt -= pay;
+    creditors[j].amt -= pay;
+    if (debtors[i].amt <= 1e-9) i++;
+    if (creditors[j].amt <= 1e-9) j++;
+  }
+  return transfers;
+}

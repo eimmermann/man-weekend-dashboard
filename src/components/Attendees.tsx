@@ -431,8 +431,8 @@ function EditForm({ attendee, onClose, onSaved }: { attendee: import('@/types').
     <form onSubmit={onSubmit} className="mt-4 grid grid-cols-1 gap-3">
       <input className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input type="date" className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} />
-        <input type="date" className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
+                        <input type="date" className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} />
+                <input type="date" className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
       </div>
       <div className="relative">
         <input

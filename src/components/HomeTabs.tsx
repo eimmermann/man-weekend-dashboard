@@ -10,19 +10,53 @@ import PokemonOfTheDay from '@/components/PokemonOfTheDay';
 import StuffTracker from '@/components/StuffTracker';
 import PickleballTracker from '@/components/PickleballTracker';
 import RandomPicker from '@/components/RandomPicker';
+import PokerTracker from '@/components/PokerTracker';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type TabKey = 'planning' | 'weekend' | 'bill';
 
 export default function HomeTabs() {
-  const [tab, setTab] = useState<TabKey>('planning');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialTab = (() => {
+    const t = searchParams.get('tab');
+    return (t === 'planning' || t === 'weekend' || t === 'bill') ? (t as TabKey) : 'planning';
+  })();
+
+  const [tab, setTab] = useState<TabKey>(initialTab);
+
+  // Keep state in sync when user navigates via back/forward or shares URL
+  // This effect runs when search params change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const spKey = searchParams.toString();
+  if (typeof window !== 'undefined') {
+    // lightweight sync without useEffect to avoid hydration warnings with next/navigation
+    const t = searchParams.get('tab');
+    const nextTab: TabKey = (t === 'planning' || t === 'weekend' || t === 'bill') ? (t as TabKey) : 'planning';
+    if (nextTab !== tab) {
+      // set state when URL drives a different tab
+      // note: this runs during render but only when values differ; React batches this safely in client components
+      setTab(nextTab);
+    }
+  }
+
+  const handleTabChange = (next: TabKey) => {
+    if (next === tab) return;
+    setTab(next);
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', next);
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-center">
         <div className="inline-flex items-center gap-2">
-          <TabButton label="Planning" active={tab === 'planning'} onClick={() => setTab('planning')} />
-          <TabButton label="Weekend Of" active={tab === 'weekend'} onClick={() => setTab('weekend')} />
-          <TabButton label="The Bill" active={tab === 'bill'} onClick={() => setTab('bill')} />
+          <TabButton label="Planning" active={tab === 'planning'} onClick={() => handleTabChange('planning')} />
+          <TabButton label="Weekend Of" active={tab === 'weekend'} onClick={() => handleTabChange('weekend')} />
+          <TabButton label="The Bill" active={tab === 'bill'} onClick={() => handleTabChange('bill')} />
         </div>
       </div>
 
@@ -42,6 +76,7 @@ export default function HomeTabs() {
       {tab === 'weekend' && (
         <div className="space-y-6">
           <RandomPicker />
+          <PokerTracker />
           <PickleballTracker />
         </div>
       )}

@@ -221,6 +221,16 @@ export default function PickleballTracker() {
     setDate(today);
   }, []);
 
+  // Default time to current time when opening the add game modal
+  useEffect(() => {
+    if (showAddForm) {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      setTime(`${hh}:${mm}`);
+    }
+  }, [showAddForm]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!team1Player1Id || !team2Player1Id) return;
@@ -350,7 +360,7 @@ export default function PickleballTracker() {
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                  className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2"
                   required
                 />
                 <input

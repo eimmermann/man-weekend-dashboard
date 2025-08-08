@@ -101,6 +101,36 @@ export function ensureSchema(): Promise<void> {
           created_at timestamptz not null default now()
         );
       `;
+
+      // Poker tables
+      await sql`
+        create table if not exists poker_games (
+          id text primary key,
+          date date not null,
+          time text,
+          status text not null default 'active',
+          created_at timestamptz not null default now()
+        );
+      `;
+
+      // Ensure time column exists for poker games
+      await sql`alter table poker_games add column if not exists time text`;
+      // Ensure status column exists for poker games
+      await sql`alter table poker_games add column if not exists status text not null default 'active'`;
+
+      await sql`
+        create table if not exists poker_game_players (
+          id text primary key,
+          game_id text not null references poker_games(id) on delete cascade,
+          attendee_id text not null references attendees(id) on delete restrict,
+          buy_in numeric(12,2) not null check (buy_in >= 0),
+          cash_out numeric(12,2) not null check (cash_out >= 0),
+          status text not null default 'active'
+        );
+      `;
+
+      // Ensure status column exists for poker_game_players
+      await sql`alter table poker_game_players add column if not exists status text not null default 'active'`;
     })();
   }
   return schemaInitialized;

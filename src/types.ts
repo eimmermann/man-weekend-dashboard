@@ -96,3 +96,30 @@ export type CreatePickleballGamePayload = {
   team2Score: number;
   notes?: string;
 };
+
+// Poker
+export type PokerGame = {
+  id: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  createdAt: string;
+  players: PokerGamePlayer[];
+};
+
+export type PokerGamePlayer = {
+  id: string; // row id
+  gameId: string;
+  attendeeId: string;
+  buyIn: number; // dollars
+  cashOut: number; // dollars won at end (can be 0)
+};
+
+export type CreatePokerGamePayload = {
+  date: string; // YYYY-MM-DD
+  players: Array<{ attendeeId: string; buyIn: number; cashOut: number }>;
+};
+
+export type PokerPayment = {
+  fromAttendeeId: string;
+  toAttendeeId: string;
+  paid: boolean;
+};
