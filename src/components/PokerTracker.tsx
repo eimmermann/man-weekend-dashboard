@@ -166,7 +166,15 @@ export default function PokerTracker() {
   }
 
   function openCashOut(gameId: string, playerId: string) {
-    setAmount('');
+    const { game, player } = findPlayer(gameId, playerId);
+    if (game && player) {
+      const totalNet = game.players.reduce((sum, p: any) => sum + (Number(p.cashOut) - Number(p.buyIn)), 0);
+      const suggested = Number((Number(player.cashOut) - totalNet).toFixed(2));
+      const clamped = Math.max(0, suggested);
+      setAmount(clamped.toFixed(2));
+    } else {
+      setAmount('');
+    }
     setCashOutModal({ gameId, playerId });
   }
 
