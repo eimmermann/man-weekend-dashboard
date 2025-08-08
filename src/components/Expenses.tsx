@@ -106,7 +106,7 @@ export default function Expenses() {
                 value={date}
                 onChange={e => setDate(e.target.value)}
               />
-              <select className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2" value={payerId} onChange={e => setPayerId(e.target.value)}>
+              <select className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2" value={payerId} onChange={e => setPayerId(e.target.value)}>
                 <option value="">Payer</option>
                 {attendees.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
