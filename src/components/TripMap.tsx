@@ -37,11 +37,11 @@ export default function TripMap() {
 
       // Create a star icon for the house location
       const star = L.divIcon({
-        html: '<div style="font-size:24px; line-height:1; color:#eab308; text-shadow:0 1px 2px rgba(0,0,0,.6)">★</div>',
-        className: 'house-star-icon',
-        iconSize: [24, 24],
-        iconAnchor: [12, 18],
-        popupAnchor: [0, -18],
+        html: '<div style="font-size:26px; line-height:1; color:#eab308; text-shadow:0 1px 2px rgba(0,0,0,.6)">★</div>',
+        className: 'leaflet-div-icon house-star-icon',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -14],
       });
       setStarIcon(star);
     }).catch(() => {
@@ -75,7 +75,7 @@ export default function TripMap() {
           <MapContainer bounds={bounds} center={house ? [house.lat, house.lng] : [40.75, -73.98]} zoom={6} style={{ height: '100%', width: '100%' }}>
             <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {house && (
-              <Marker position={[house.lat, house.lng]} icon={starIcon || undefined}>
+              <Marker position={[house.lat, house.lng]} icon={starIcon || undefined} zIndexOffset={1000}>
                 <Popup>
                   <div className="font-medium mb-1">Man Weekend House</div>
                   <a

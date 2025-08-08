@@ -42,13 +42,15 @@ export default function Attendees() {
         const res = await fetch(`/api/geocode?q=${encodeURIComponent(address)}&limit=6`, { signal: ac.signal });
         if (!res.ok) return;
         const data = (await res.json()) as Suggestion[];
-        setSuggestions(data);
+        // Ensure suggestions use the same formatted style as display
+        const formatted = data.map(s => ({ ...s, label: formatAddress(s.label) || s.label }));
+        setSuggestions(formatted);
         setOpen(true);
         setHighlightIndex(-1);
       } catch {
         // ignore
       }
-    }, 250);
+    }, 150);
     return () => clearTimeout(timeout);
   }, [address]);
 
@@ -189,9 +191,9 @@ export default function Attendees() {
                         key={s.id}
                         type="button"
                         onClick={() => chooseSuggestion(s)}
-                        className={`block w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 ${idx === highlightIndex ? 'bg-zinc-50 dark:bg-zinc-800' : ''}`}
+                    className={`block w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 ${idx === highlightIndex ? 'bg-zinc-50 dark:bg-zinc-800' : ''}`}
                       >
-                        {formatAddress(s.label) || s.label}
+                        {s.label}
                       </button>
                     ))}
                   </div>

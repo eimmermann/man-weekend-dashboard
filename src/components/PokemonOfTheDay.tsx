@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { TRIP_START_ISO } from '@/lib/constants';
-import { differenceInCalendarDays, format } from 'date-fns';
+import { differenceInCalendarDays } from 'date-fns';
 import { ensurePokemonInCache, getPokemonFromCache, PokemonInfo } from '@/lib/pokemon';
 
 // Info type is provided by lib/pokemon
@@ -35,7 +35,6 @@ export default function PokemonOfTheDay() {
     <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Pokémon of the Day</h3>
-        <div className="text-sm opacity-70">{daysRemaining} day{daysRemaining === 1 ? '' : 's'} to {format(new Date(TRIP_START_ISO), 'MMM d')}</div>
       </div>
       {poke ? (
         <div className="mt-4 flex items-center gap-4">
