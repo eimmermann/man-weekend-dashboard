@@ -8,6 +8,7 @@ import TripMap from '@/components/TripMap';
 import { Suspense } from 'react';
 import PokemonOfTheDay from '@/components/PokemonOfTheDay';
 import StuffTracker from '@/components/StuffTracker';
+import PickleballTracker from '@/components/PickleballTracker';
 
 type TabKey = 'planning' | 'weekend' | 'bill';
 
@@ -38,9 +39,8 @@ export default function HomeTabs() {
       )}
 
       {tab === 'weekend' && (
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
-          <h3 className="text-lg font-semibold">Weekend Of</h3>
-          <p className="mt-2 text-sm opacity-70">Add schedule, tasks, and logistics here.</p>
+        <div className="space-y-6">
+          <PickleballTracker />
         </div>
       )}
 

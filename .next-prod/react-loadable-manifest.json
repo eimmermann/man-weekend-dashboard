@@ -10,18 +10,5 @@
     "files": [
       "static/chunks/722.1676ac40a4a20207.js"
     ]
-  },
-  "components\\TripMap.tsx -> leaflet": {
-    "id": 5752,
-    "files": [
-      "static/chunks/d0deef33.53a40f89e3d32118.js"
-    ]
-  },
-  "components\\TripMap.tsx -> react-leaflet": {
-    "id": 9712,
-    "files": [
-      "static/chunks/d0deef33.53a40f89e3d32118.js",
-      "static/chunks/712.c5784de0e7ff3d33.js"
-    ]
   }
 }

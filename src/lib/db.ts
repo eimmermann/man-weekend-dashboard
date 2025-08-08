@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import type { Attendee, Expense } from '@/types';
+import type { Attendee, Expense, PickleballGame } from '@/types';
 import { ensureSchema, getSql } from '@/lib/neon';
 
 type AttendeeRow = {
@@ -361,6 +361,92 @@ export async function deleteStuffEntry(entryId: string): Promise<boolean> {
 export async function listStuffCategories(): Promise<string[]> {
   await ensureSchema();
   const sql = getSql();
-  const rows = await sql`select distinct category from stuff_items where category is not null order by category asc`;
-  return (rows as unknown as { category: string }[]).map(r => String(r.category));
+  const rows = await sql`
+    select distinct category
+    from stuff_items
+    where category is not null and category != ''
+    order by category asc
+  `;
+  return (rows as unknown as { category: string }[]).map(row => String(row.category));
+}
+
+// Pickleball games
+type PickleballGameRow = {
+  id: string;
+  date: string;
+  time: string | null;
+  location: string | null;
+  team1_player1_id: string;
+  team1_player2_id: string | null;
+  team2_player1_id: string;
+  team2_player2_id: string | null;
+  team1_score: number;
+  team2_score: number;
+  winner: string;
+  notes: string | null;
+  created_at: string;
+};
+
+function mapPickleballGameRow(row: PickleballGameRow): PickleballGame {
+  return {
+    id: String(row.id),
+    date: new Date(String(row.date)).toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+    time: row.time ? String(row.time) : undefined,
+    location: row.location ? String(row.location) : undefined,
+    team1Player1Id: String(row.team1_player1_id),
+    team1Player2Id: row.team1_player2_id ? String(row.team1_player2_id) : undefined,
+    team2Player1Id: String(row.team2_player1_id),
+    team2Player2Id: row.team2_player2_id ? String(row.team2_player2_id) : undefined,
+    team1Score: Number(row.team1_score),
+    team2Score: Number(row.team2_score),
+    winner: row.winner as 'team1' | 'team2',
+    notes: row.notes ? String(row.notes) : undefined,
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+export async function listPickleballGames(): Promise<PickleballGame[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select id, date, time, location, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, team1_score, team2_score, winner, notes, created_at
+    from pickleball_games
+    order by date desc, time desc, created_at desc
+  `;
+  return (rows as unknown as PickleballGameRow[]).map(mapPickleballGameRow);
+}
+
+export async function createPickleballGame(input: {
+  date: string;
+  time?: string;
+  location?: string;
+  team1Player1Id: string;
+  team1Player2Id?: string;
+  team2Player1Id: string;
+  team2Player2Id?: string;
+  team1Score: number;
+  team2Score: number;
+  notes?: string;
+}): Promise<PickleballGame> {
+  await ensureSchema();
+  const id = nanoid();
+  const winner = input.team1Score > input.team2Score ? 'team1' : 'team2';
+  const sql = getSql();
+  const rows = await sql`
+    insert into pickleball_games (id, date, time, location, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, team1_score, team2_score, winner, notes)
+    values (${id}, ${input.date}, ${input.time || null}, ${input.location || null}, ${input.team1Player1Id}, ${input.team1Player2Id || null}, ${input.team2Player1Id}, ${input.team2Player2Id || null}, ${input.team1Score}, ${input.team2Score}, ${winner}, ${input.notes || null})
+    returning id, date, time, location, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, team1_score, team2_score, winner, notes, created_at
+  `;
+  return mapPickleballGameRow((rows as unknown as PickleballGameRow[])[0]);
+}
+
+export async function deletePickleballGame(gameId: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  const result = await sql`
+    delete from pickleball_games
+    where id = ${gameId}
+    returning id
+  `;
+  return Array.isArray(result) && result.length > 0;
 }

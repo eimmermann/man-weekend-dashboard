@@ -67,3 +67,32 @@ export type StuffEntry = {
   quantity: number;
   createdAt: string;
 };
+
+export type PickleballGame = {
+  id: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  time?: string; // HH:MM format
+  location?: string;
+  team1Player1Id: string;
+  team1Player2Id?: string; // Optional for singles
+  team2Player1Id: string;
+  team2Player2Id?: string; // Optional for singles
+  team1Score: number;
+  team2Score: number;
+  winner: 'team1' | 'team2';
+  notes?: string;
+  createdAt: string;
+};
+
+export type CreatePickleballGamePayload = {
+  date: string;
+  time?: string;
+  location?: string;
+  team1Player1Id: string;
+  team1Player2Id?: string;
+  team2Player1Id: string;
+  team2Player2Id?: string;
+  team1Score: number;
+  team2Score: number;
+  notes?: string;
+};

@@ -82,6 +82,25 @@ export function ensureSchema(): Promise<void> {
           created_at timestamptz not null default now()
         );
       `;
+
+      // Pickleball games table
+      await sql`
+        create table if not exists pickleball_games (
+          id text primary key,
+          date date not null,
+          time text,
+          location text,
+          team1_player1_id text not null references attendees(id) on delete restrict,
+          team1_player2_id text references attendees(id) on delete restrict,
+          team2_player1_id text not null references attendees(id) on delete restrict,
+          team2_player2_id text references attendees(id) on delete restrict,
+          team1_score integer not null check (team1_score >= 0),
+          team2_score integer not null check (team2_score >= 0),
+          winner text not null check (winner in ('team1', 'team2')),
+          notes text,
+          created_at timestamptz not null default now()
+        );
+      `;
     })();
   }
   return schemaInitialized;
