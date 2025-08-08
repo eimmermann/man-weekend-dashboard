@@ -220,3 +220,110 @@ export async function deleteAttendee(attendeeId: string): Promise<{ ok: true } |
   if ((res as unknown as { id: string }[]).length === 0) return { ok: false, reason: 'not_found' };
   return { ok: true };
 }
+
+// -----------------------
+// Stuff tracker
+// -----------------------
+
+export type StuffItem = { id: string; name: string; category: string | null };
+export type StuffEntry = { id: string; itemId: string; itemName: string; itemCategory: string | null; attendeeId: string; attendeeName: string; quantity: number; createdAt: string };
+
+export async function listStuffItems(): Promise<StuffItem[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`select id, name, category from stuff_items order by name asc`;
+  return (rows as unknown as { id: string; name: string; category: string | null }[]).map(r => ({ id: String(r.id), name: String(r.name), category: r.category ?? null }));
+}
+
+export async function listStuffEntries(): Promise<StuffEntry[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select se.id,
+           se.quantity,
+           se.created_at,
+           si.id as item_id,
+           si.name as item_name,
+           si.category as item_category,
+           a.id as attendee_id,
+           a.name as attendee_name
+    from stuff_entries se
+    join stuff_items si on si.id = se.item_id
+    join attendees a on a.id = se.attendee_id
+    order by se.created_at desc
+  `;
+  return (rows as unknown as Array<{ id: string; quantity: number; created_at: string; item_id: string; item_name: string; item_category: string | null; attendee_id: string; attendee_name: string }>).map(r => ({
+    id: String(r.id),
+    itemId: String(r.item_id),
+    itemName: String(r.item_name),
+    itemCategory: r.item_category ?? null,
+    attendeeId: String(r.attendee_id),
+    attendeeName: String(r.attendee_name),
+    quantity: Number(r.quantity),
+    createdAt: new Date(String(r.created_at)).toISOString(),
+  }));
+}
+
+async function getOrCreateStuffItemByName(nameRaw: string, categoryRaw?: string | null): Promise<StuffItem> {
+  const sql = getSql();
+  const name = nameRaw.trim().toLowerCase();
+  const category = (categoryRaw || '').trim().toLowerCase() || null;
+  // try get existing
+  const existing = await sql`select id, name, category from stuff_items where name = ${name} limit 1`;
+  const ex = (existing as unknown as { id: string; name: string; category: string | null }[])[0];
+  if (ex) {
+    // If a category is provided and differs from stored value, update it
+    if (category && (ex.category ?? null) !== category) {
+      const updated = await sql`update stuff_items set category = ${category} where id = ${ex.id} returning id, name, category`;
+      const row = (updated as unknown as { id: string; name: string; category: string | null }[])[0];
+      return { id: String(row.id), name: String(row.name), category: row.category ?? null };
+    }
+    return { id: String(ex.id), name: String(ex.name), category: ex.category ?? null };
+  }
+  // create
+  const id = nanoid();
+  const rows = await sql`insert into stuff_items (id, name, category) values (${id}, ${name}, ${category}) returning id, name, category`;
+  const row = (rows as unknown as { id: string; name: string; category: string | null }[])[0];
+  return { id: String(row.id), name: String(row.name), category: row.category ?? null };
+}
+
+export async function createStuffEntry(input: { thingName: string; quantity: number; attendeeId: string; category?: string | null }): Promise<StuffEntry> {
+  await ensureSchema();
+  const sql = getSql();
+  const item = await getOrCreateStuffItemByName(input.thingName, input.category ?? null);
+  const id = nanoid();
+  const qty = Math.max(1, Math.floor(Number(input.quantity)) || 1);
+  const rows = await sql`
+    insert into stuff_entries (id, item_id, attendee_id, quantity)
+    values (${id}, ${item.id}, ${input.attendeeId}, ${qty})
+    returning id, quantity, created_at
+  `;
+  const row = (rows as unknown as { id: string; quantity: number; created_at: string }[])[0];
+  // Fetch attendee name
+  const a = await sql`select name from attendees where id = ${input.attendeeId} limit 1`;
+  const attendeeName = String((a as unknown as { name: string }[])[0]?.name || '');
+  return {
+    id: String(row.id),
+    itemId: item.id,
+    itemName: item.name,
+    itemCategory: item.category ?? null,
+    attendeeId: input.attendeeId,
+    attendeeName,
+    quantity: Number(row.quantity),
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+export async function deleteStuffEntry(entryId: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`delete from stuff_entries where id = ${entryId} returning id`;
+  return (rows as unknown as { id: string }[]).length > 0;
+}
+
+export async function listStuffCategories(): Promise<string[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`select distinct category from stuff_items where category is not null order by category asc`;
+  return (rows as unknown as { category: string }[]).map(r => String(r.category));
+}

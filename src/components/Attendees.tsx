@@ -128,18 +128,13 @@ export default function Attendees() {
               <div className="text-xs opacity-70">{formatAddress(a.startingAddress)}</div>
               {(a.arrivalDate || a.departureDate) && (
                 <div className="mt-1 text-[11px] opacity-70">
-                  {a.arrivalDate ? `Arrives ${a.arrivalDate}` : ''}
+                  {a.arrivalDate ? `Arrives ${(a.arrivalDate || '').slice(0,10)}` : ''}
                   {a.arrivalDate && a.departureDate ? ' • ' : ''}
-                  {a.departureDate ? `Departs ${a.departureDate}` : ''}
+                  {a.departureDate ? `Departs ${(a.departureDate || '').slice(0,10)}` : ''}
                 </div>
               )}
             </div>
             <div className="flex items-center gap-3">
-              {a.location ? (
-                <div className="text-xs opacity-70">{a.location.lat.toFixed(3)}, {a.location.lng.toFixed(3)}</div>
-              ) : (
-                <div className="text-xs opacity-50 italic">geocoding…</div>
-              )}
               <button
                 type="button"
                 onClick={() => setConfirm({ id: a.id, name: a.name })}

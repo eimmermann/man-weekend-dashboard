@@ -7,6 +7,7 @@ import TotalSpend from '@/components/TotalSpend';
 import TripMap from '@/components/TripMap';
 import { Suspense } from 'react';
 import PokemonOfTheDay from '@/components/PokemonOfTheDay';
+import StuffTracker from '@/components/StuffTracker';
 
 type TabKey = 'planning' | 'weekend' | 'bill';
 
@@ -32,6 +33,7 @@ export default function HomeTabs() {
               <TripMap />
             </Suspense>
           </div>
+          <StuffTracker />
         </div>
       )}
 

@@ -103,7 +103,13 @@ export async function ensurePokemonInCache(dexNumber: number): Promise<PokemonIn
       flavor_text_entries?: Array<{ language?: { name?: string }; flavor_text?: string }>;
     } = await res.json();
     const name: string = (json.names?.find(n => n.language?.name === 'en')?.name || seededName).toLowerCase();
-    const flavor: string | undefined = json.flavor_text_entries?.find(e => e.language?.name === 'en')?.flavor_text?.replace(/\f/g, ' ');
+    // Choose the longest cleaned English flavor text for a richer description
+    const englishEntries = (json.flavor_text_entries || []).filter(e => e.language?.name === 'en');
+    const cleanedEntries = englishEntries
+      .map(e => (e.flavor_text || ''))
+      .map(t => t.replace(/[\f\n\r]+/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter(t => t.length > 0);
+    const flavor: string | undefined = cleanedEntries.sort((a, b) => b.length - a.length)[0];
     const info: PokemonInfo = { id: dexNumber, name, flavor_text: flavor };
     cache[dexNumber] = info;
     writeCache(cache);

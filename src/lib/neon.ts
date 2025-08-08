@@ -61,6 +61,27 @@ export function ensureSchema(): Promise<void> {
           primary key (expense_id, beneficiary_id)
         );
       `;
+
+      // Stuff tracker tables
+      await sql`
+        create table if not exists stuff_items (
+          id text primary key,
+          name text not null unique,
+          category text
+        );
+      `;
+
+      await sql`alter table stuff_items add column if not exists category text`;
+
+      await sql`
+        create table if not exists stuff_entries (
+          id text primary key,
+          item_id text not null references stuff_items(id) on delete cascade,
+          attendee_id text not null references attendees(id) on delete restrict,
+          quantity integer not null check (quantity >= 1),
+          created_at timestamptz not null default now()
+        );
+      `;
     })();
   }
   return schemaInitialized;

@@ -50,3 +50,20 @@ export type UpdateExpensePayload = Partial<CreateExpensePayload> & {
     beneficiaryId: string;
   };
 };
+
+export type StuffItem = {
+  id: string;
+  name: string;
+  category: string | null;
+};
+
+export type StuffEntry = {
+  id: string;
+  itemId: string;
+  itemName: string;
+  itemCategory: string | null;
+  attendeeId: string;
+  attendeeName: string;
+  quantity: number;
+  createdAt: string;
+};
