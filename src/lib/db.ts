@@ -221,6 +221,43 @@ export async function deleteAttendee(attendeeId: string): Promise<{ ok: true } |
   return { ok: true };
 }
 
+async function getAttendeeById(attendeeId: string): Promise<Attendee | null> {
+  const sql = getSql();
+  const rows = await sql`
+    select id, name, starting_address, arrival_date, departure_date, location_lat, location_lng, created_at
+    from attendees where id = ${attendeeId} limit 1
+  `;
+  const row = (rows as unknown as AttendeeRow[])[0];
+  return row ? mapAttendeeRow(row) : null;
+}
+
+export async function updateAttendee(attendeeId: string, input: { name?: string; startingAddress?: string | null; arrivalDate?: string | null; departureDate?: string | null; location?: { lat: number; lng: number } | null }): Promise<Attendee | null> {
+  await ensureSchema();
+  const sql = getSql();
+  // Read existing; if not found, return null
+  const existing = await getAttendeeById(attendeeId);
+  if (!existing) return null;
+  const next = {
+    name: input.name != null ? input.name.trim() : existing.name,
+    startingAddress: input.startingAddress != null ? input.startingAddress.trim() : existing.startingAddress,
+    arrivalDate: input.arrivalDate !== undefined ? input.arrivalDate : existing.arrivalDate,
+    departureDate: input.departureDate !== undefined ? input.departureDate : existing.departureDate,
+    lat: input.location ? input.location.lat : existing.location?.lat ?? null,
+    lng: input.location ? input.location.lng : existing.location?.lng ?? null,
+  };
+  await sql`
+    update attendees
+    set name = ${next.name},
+        starting_address = ${next.startingAddress},
+        arrival_date = ${next.arrivalDate},
+        departure_date = ${next.departureDate},
+        location_lat = ${next.lat},
+        location_lng = ${next.lng}
+    where id = ${attendeeId}
+  `;
+  return getAttendeeById(attendeeId);
+}
+
 // -----------------------
 // Stuff tracker
 // -----------------------

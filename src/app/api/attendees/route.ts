@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAttendee, listAttendees } from '@/lib/db';
 import { geocodeAddress } from '@/lib/geocode';
-import { formatAddress } from '@/lib/formatAddress';
 
 const CreateSchema = z.object({
   name: z.string().min(1).max(100),
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
   }
   const { name, startingAddress, arrivalDate, departureDate } = parsed.data as { name: string; startingAddress: string; arrivalDate?: string; departureDate?: string };
   const location = await geocodeAddress(startingAddress);
-  const formatted = formatAddress(startingAddress) || startingAddress;
-  const attendee = await createAttendee({ name, startingAddress: formatted, arrivalDate: arrivalDate ?? null, departureDate: departureDate ?? null, location });
+  const attendee = await createAttendee({ name, startingAddress, arrivalDate: arrivalDate ?? null, departureDate: departureDate ?? null, location });
   return NextResponse.json(attendee, { status: 201 });
 }
