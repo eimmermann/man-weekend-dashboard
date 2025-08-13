@@ -27,6 +27,16 @@ export type DatabaseSchema = {
   expenses: Expense[];
 };
 
+export type ScheduleActivity = {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  start: string; // HH:mm
+  end: string;   // HH:mm
+  color?: string;
+  createdAt: string;
+};
+
 export type CreateAttendeePayload = {
   name: string;
   startingAddress: string;

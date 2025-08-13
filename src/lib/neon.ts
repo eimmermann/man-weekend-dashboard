@@ -131,6 +131,19 @@ export function ensureSchema(): Promise<void> {
 
       // Ensure status column exists for poker_game_players
       await sql`alter table poker_game_players add column if not exists status text not null default 'active'`;
+
+      // Schedule activities table
+      await sql`
+        create table if not exists schedule_activities (
+          id text primary key,
+          title text not null,
+          date date not null,
+          start_time text not null,
+          end_time text not null,
+          color text,
+          created_at timestamptz not null default now()
+        );
+      `;
     })();
   }
   return schemaInitialized;

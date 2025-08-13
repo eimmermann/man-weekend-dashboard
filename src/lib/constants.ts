@@ -1,5 +1,5 @@
 export const TRIP_START_ISO = "2025-09-11T00:00:00-04:00"; // 9/11/25 start
-export const TRIP_END_ISO = "2025-09-15T23:59:59-04:00";   // 9/15/25 end
+export const TRIP_END_ISO = "2025-09-14T23:59:59-04:00";   // 9/14/25 end
 
 export const TRIP_NAME = 'Man Weekend 2025';
 export const HOUSE_ADDRESS = "15 Goldring Drive, Highland Lake, NY 12743";

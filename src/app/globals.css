@@ -42,6 +42,15 @@ body {
   @apply bg-emerald-400/70 ring-emerald-300/70 text-white shadow-md;
 }
 
+/* Hide scrollbars utility */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar { /* Chrome, Safari and Opera */
+  display: none;
+}
+
 /* Ensure custom leaflet div icons are visible */
 .house-star-icon {
   border: none !important;

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import type { Attendee, Expense, PickleballGame } from '@/types';
+import type { Attendee, Expense, PickleballGame, ScheduleActivity } from '@/types';
 import { ensureSchema, getSql } from '@/lib/neon';
 
 type AttendeeRow = {
@@ -549,6 +549,72 @@ export async function deletePokerGame(gameId: string): Promise<boolean> {
   await ensureSchema();
   const sql = getSql();
   const res = await sql`delete from poker_games where id = ${gameId} returning id`;
+  return (res as unknown as { id: string }[]).length > 0;
+}
+
+// -----------------------
+// Schedule activities
+// -----------------------
+
+type ActivityRow = { id: string; title: string; date: string; start_time: string; end_time: string; color: string | null; created_at: string };
+
+function mapActivityRow(row: ActivityRow): ScheduleActivity {
+  return {
+    id: String(row.id),
+    title: String(row.title),
+    date: new Date(String(row.date)).toISOString().split('T')[0],
+    start: String(row.start_time),
+    end: String(row.end_time),
+    color: row.color ?? undefined,
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+export async function listActivities(): Promise<ScheduleActivity[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`select id, title, date, start_time, end_time, color, created_at from schedule_activities order by date asc, start_time asc`;
+  return (rows as unknown as ActivityRow[]).map(mapActivityRow);
+}
+
+export async function createActivity(input: { title: string; date: string; start: string; end: string; color?: string }): Promise<ScheduleActivity> {
+  await ensureSchema();
+  const sql = getSql();
+  const id = nanoid();
+  const rows = await sql`
+    insert into schedule_activities (id, title, date, start_time, end_time, color)
+    values (${id}, ${input.title}, ${input.date}, ${input.start}, ${input.end}, ${input.color || null})
+    returning id, title, date, start_time, end_time, color, created_at
+  `;
+  return mapActivityRow((rows as unknown as ActivityRow[])[0]);
+}
+
+export async function updateActivity(id: string, input: Partial<{ title: string; date: string; start: string; end: string; color?: string }>): Promise<ScheduleActivity | null> {
+  await ensureSchema();
+  const sql = getSql();
+  const existing = await sql`select id, title, date, start_time, end_time, color, created_at from schedule_activities where id = ${id} limit 1`;
+  const row = (existing as unknown as ActivityRow[])[0];
+  if (!row) return null;
+  const next = {
+    title: input.title ?? row.title,
+    date: input.date ?? row.date,
+    start: input.start ?? row.start_time,
+    end: input.end ?? row.end_time,
+    color: input.color ?? row.color ?? null,
+  };
+  const res = await sql`
+    update schedule_activities
+    set title = ${next.title}, date = ${next.date}, start_time = ${next.start}, end_time = ${next.end}, color = ${next.color}
+    where id = ${id}
+    returning id, title, date, start_time, end_time, color, created_at
+  `;
+  return mapActivityRow((res as unknown as ActivityRow[])[0]);
+}
+
+export async function deleteActivity(id: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  const res = await sql`delete from schedule_activities where id = ${id} returning id`;
   return (res as unknown as { id: string }[]).length > 0;
 }
 
