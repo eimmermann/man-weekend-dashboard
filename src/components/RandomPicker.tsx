@@ -15,9 +15,7 @@ export default function RandomPicker() {
   const [customName, setCustomName] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customNames, setCustomNames] = useState<{ id: string; name: string }[]>([]);
-  const [rotateY, setRotateY] = useState(0);
-  const [isRolling, setIsRolling] = useState(false);
-  const [wheelFaces, setWheelFaces] = useState<{ id: string; name: string }[]>([]);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const animationRef = useRef<number | null>(null);
 
   // Initialize selected attendees when attendees data loads
@@ -33,9 +31,9 @@ export default function RandomPicker() {
     setIsPicking(true);
     setWinner(null);
     setShowWinner(false);
-    setIsRolling(true);
+    setHighlightedId(null);
 
-    // Build selected names (attendees + custom), cap to 6 faces
+    // Build selected names (attendees + custom)
     const availableAttendees = attendees?.filter(a => selectedAttendees.includes(a.id)) || [];
     const selectedCustomNames = customNames.filter(c => selectedAttendees.includes(c.id));
     const allNames = [
@@ -44,68 +42,39 @@ export default function RandomPicker() {
     ];
 
     if (allNames.length === 0) return;
-
-    // Use up to 20 names. Ensure stable face order for both attendees and custom names
-    const namesForFaces = allNames.slice(0, 20);
-    setWheelFaces(namesForFaces);
-
-    // Randomly choose a winner among the faces-in-use
-    const winnerIndex = Math.floor(Math.random() * namesForFaces.length);
-    const finalWinner = namesForFaces[winnerIndex];
-    // Persist winner at the moment of spin so front-face name matches visual landing
-    // Winner is re-set only when animation completes
-    // Store directly in local var used for end state
-
-    // For an N-gon prism, winnerIndex corresponds to the face at angle = winnerIndex * segmentAngle
-    const segmentAngle = 360 / namesForFaces.length;
-    const targetY = -winnerIndex * segmentAngle; // negative to bring that face to the front
-    const extraY = (2 + Math.floor(Math.random() * 3)) * 360; // extra spins for flair
-    const startY = rotateY;
-    // land exactly on the target angle modulo 360 relative to base spins, avoiding rounding drift
-    const base = startY + extraY;
-    const normalize = (deg: number) => {
-      let d = deg % 360;
-      if (d < 0) d += 360;
-      return d;
-    };
-    const delta = normalize(targetY - normalize(base));
-    const endY = base + delta;
-
-    const startTime = Date.now();
-    const duration = 1800;
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentY = startY + (endY - startY) * easeOut;
-
-      setRotateY(currentY);
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
+    // Flash different names briefly, then land on a final winner
+    const namesForFlash = allNames.slice(0, 50);
+    const intervalMs = 80;
+    const durationMs = 1600;
+    const steps = Math.max(8, Math.floor(durationMs / intervalMs));
+    let count = 0;
+    if (animationRef.current) window.clearInterval(animationRef.current);
+    const id = window.setInterval(() => {
+      const pick = namesForFlash[Math.floor(Math.random() * namesForFlash.length)];
+      setHighlightedId(pick.id);
+      count++;
+      if (count >= steps) {
+        window.clearInterval(id);
+        const final = namesForFlash[Math.floor(Math.random() * namesForFlash.length)];
+        setHighlightedId(final.id);
         setWinner({
-          id: finalWinner.id,
-          name: finalWinner.name,
+          id: final.id,
+          name: final.name,
           startingAddress: '',
           createdAt: new Date().toISOString(),
         });
         setShowWinner(true);
         setIsPicking(false);
-        setIsRolling(false);
       }
-    };
-
-    animate();
+    }, intervalMs);
+    animationRef.current = id;
   };
 
   const stopPicking = () => {
     if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
+      window.clearInterval(animationRef.current);
     }
     setIsPicking(false);
-    setIsRolling(false);
   };
 
   const toggleAttendee = (attendeeId: string) => {
@@ -161,19 +130,29 @@ export default function RandomPicker() {
     ...availableAttendees.map(a => ({ id: a.id, name: a.name, type: 'attendee' as const })),
     ...selectedCustomNames.map(c => ({ id: c.id, name: c.name, type: 'custom' as const }))
   ];
-  const facesToRender = wheelFaces.length > 0 ? wheelFaces : allNames.slice(0, 20);
+  // no 3D wheel; simple flashing selection
 
   return (
-    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
-      <div className="flex items-center justify-between mb-6">
+    <div className="random-picker rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Random Picker</h3>
-        <button
-          type="button"
-          onClick={() => setShowCustomInput(true)}
-          className="text-xs rounded-xl bg-white/10 hover:bg-white/15 text-white ring-1 ring-white/15 font-medium px-3 py-1.5"
-        >
-          Add Custom Name
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCustomInput(true)}
+            className="sub-btn"
+          >
+            Add Custom Name
+          </button>
+          <button
+            type="button"
+            onClick={startPicking}
+            disabled={(attendees?.length || 0) === 0 || selectedAttendees.length === 0}
+            className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5"
+          >
+            Spin
+          </button>
+        </div>
       </div>
 
       {/* Custom name input */}
@@ -197,7 +176,7 @@ export default function RandomPicker() {
             </button>
             <button
               onClick={() => setShowCustomInput(false)}
-              className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm"
+              className="sub-btn"
             >
               Cancel
             </button>
@@ -205,28 +184,22 @@ export default function RandomPicker() {
         </div>
       )}
 
-      {/* Selection pool and wheel layout */}
-          <div className="mb-6 flex flex-col gap-6 md:gap-8 md:flex-row md:items-start">
-            {/* Selection pool with pills */}
-            <div className="w-full md:w-64 flex flex-col md:h-full">
-              <h4 className="text-sm font-medium mb-3">Selection Pool ({allNames.length})</h4>
-              <div className="flex flex-wrap gap-2 md:flex-col md:flex-1 md:overflow-y-auto">
+      {/* Compact selection list */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
                 {attendees?.map(attendee => (
                   <button
                     key={attendee.id}
                     onClick={() => toggleAttendee(attendee.id)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all w-fit ${
-                      selectedAttendees.includes(attendee.id)
-                        ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow'
-                        : 'ring-1 ring-white/15 text-slate-100 hover:bg-white/10'
-                    }`}
+                    className={`sub-btn ${highlightedId === attendee.id ? 'is-highlighted' : ''}`}
+                    aria-pressed={selectedAttendees.includes(attendee.id)}
                   >
                     {attendee.name}
                   </button>
                 ))}
                 {selectedCustomNames.map(customName => (
                   <div key={customName.id} className="flex items-center gap-1 w-fit">
-                    <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow">
+                    <span className={`sub-btn ${selectedAttendees.includes(customName.id) ? 'sub-btn-selected' : ''} ${highlightedId === customName.id ? 'is-highlighted' : ''}`}> 
                       {customName.name}
                     </span>
                     <button
@@ -238,83 +211,9 @@ export default function RandomPicker() {
                     </button>
                   </div>
                 ))}
-              </div>
             </div>
 
-            {/* 3D Wheel Picker */}
-            <div className="flex-1 flex flex-col items-center">
-              {allNames.length > 0 && (
-                <div className="mb-6 w-full flex justify-center">
-                  {/* Perspective container */}
-                  <div className="w-56 h-56 sm:w-64 sm:h-64 [perspective:1200px]">
-                    <div
-                      className="relative w-full h-full [transform-style:preserve-3d] transition-transform duration-700 ease-out"
-                      style={{ transform: `rotateY(${rotateY}deg)` }}
-                    >
-                      {/* Build an N-gon cylinder: N faces around Y axis */}
-                      {facesToRender.map((f, i) => {
-                        const n = facesToRender.length;
-                        const faceApothemPx = 80; // distance from center to face plane
-                        const faceWidthPx = 2 * faceApothemPx * Math.tan(Math.PI / n);
-                        const angle = (360 / n) * i;
-                        const bg = i % 2 === 0 ? 'bg-indigo-500 text-white' : 'bg-indigo-300 text-indigo-900';
-                        return (
-                          <div
-                            key={f.id}
-                            className={`absolute rounded-xl shadow-xl ${bg} [backface-visibility:hidden] flex items-center justify-center`}
-                            style={{
-                              width: `${faceWidthPx}px`,
-                              height: `${faceWidthPx}px`,
-                              top: '50%',
-                              left: '50%',
-                              transform: `translate(-50%, -50%) rotateY(${angle}deg) translateZ(${faceApothemPx}px)`
-                            }}
-                          >
-                            <div className="text-sm font-bold px-2 text-center truncate" style={{ maxWidth: `${faceWidthPx - 16}px` }}>{f.name}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Spin button */}
-              {!showWinner && !isPicking && (
-                <button
-                  onClick={startPicking}
-                  disabled={allNames.length === 0}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl text-lg"
-                >
-                  Spin the Wheel!
-                </button>
-              )}
-
-              {isPicking && (
-                <div className="space-y-4">
-                  <div className="text-lg font-semibold text-indigo-600">
-                    Spinning...
-                  </div>
-                </div>
-              )}
-
-              {showWinner && winner && (
-                <div className="space-y-4 text-center flex flex-col items-center">
-                  <div className="animate-pulse">
-                    <div className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">The winner is...</div>
-                    <div className="text-3xl font-extrabold text-green-600">
-                      {winner.name}!
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleSpinAgain}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium rounded-xl mx-auto"
-                  >
-                    Spin Again
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* controls moved to header */}
           </div>
     </div>
   );

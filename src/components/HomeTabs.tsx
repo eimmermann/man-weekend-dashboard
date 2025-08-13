@@ -50,6 +50,8 @@ export default function HomeTabs() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  
+
   return (
     <div className="space-y-6">
       <div className="flex justify-center">
@@ -99,7 +101,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
       className={`px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-full transition ${
         active
           ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow'
-          : 'ring-1 ring-white/15 text-slate-100 hover:bg-white/10'
+          : 'text-slate-100 hover:bg-white/10'
       }`}
       aria-current={active ? 'page' : undefined}
     >
@@ -107,5 +109,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
     </button>
   );
 }
+
+//
 
 
