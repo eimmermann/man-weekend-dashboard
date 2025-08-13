@@ -41,7 +41,7 @@ export default function PokerTracker() {
   const attendeeName = (id: string) => attendees.find(a => a.id === id)?.name || 'Unknown';
   const formatCurrency = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
 
-  const addRow = () => setRows(prev => [...prev, { attendeeId: attendees[0]?.id || '', buyIn: 20 }]);
+  // const addRow = () => setRows(prev => [...prev, { attendeeId: attendees[0]?.id || '', buyIn: 20 }]);
   const removeRow = (idx: number) => setRows(prev => prev.filter((_, i) => i !== idx));
 
   // Auto-create a row for every attendee once attendees are loaded
@@ -84,12 +84,12 @@ export default function PokerTracker() {
 
   const gamesList: PokerGame[] = Array.isArray(games) ? games : [];
 
-  function canGameBeFinished(game: PokerGame): boolean {
-    const allPlayersFinished = (game.players || []).every((p) => (p as { status?: 'active' | 'finished' }).status === 'finished');
-    const totalNet = (game.players || []).reduce((sum: number, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
-    const rounded = Math.round(totalNet * 100) / 100;
-    return allPlayersFinished && rounded === 0;
-  }
+  // function canGameBeFinished(game: PokerGame): boolean {
+  //   const allPlayersFinished = (game.players || []).every((p) => (p as { status?: 'active' | 'finished' }).status === 'finished');
+  //   const totalNet = (game.players || []).reduce((sum: number, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
+  //   const rounded = Math.round(totalNet * 100) / 100;
+  //   return allPlayersFinished && rounded === 0;
+  // }
 
   // Recalculate settlement when switching to Summary/Bill tabs
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function PokerTracker() {
       alert('All players must be finished before marking the game as finished.');
       return;
     }
-    const totalNet = game.players.reduce((sum, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
+      const totalNet = game.players.reduce((sum, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
     const rounded = Math.round(totalNet * 100) / 100;
     if (rounded !== 0) {
       setFinishBlockModal({ amount: rounded });

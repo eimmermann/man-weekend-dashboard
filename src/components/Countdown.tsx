@@ -29,7 +29,7 @@ export default function Countdown() {
   const start = useMemo(() => new Date(TRIP_START_ISO), []);
   const end = useMemo(() => new Date(TRIP_END_ISO), []);
   const secsToStart = Math.max(0, differenceInSeconds(start, now));
-  const secsToEnd = Math.max(0, differenceInSeconds(end, now));
+  // const secsToEnd = Math.max(0, differenceInSeconds(end, now));
 
   const parts = secondsToParts(secsToStart);
 

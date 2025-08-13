@@ -70,12 +70,12 @@ export default function RandomPicker() {
     animationRef.current = id;
   };
 
-  const stopPicking = () => {
-    if (animationRef.current) {
-      window.clearInterval(animationRef.current);
-    }
-    setIsPicking(false);
-  };
+  // const stopPicking = () => {
+  //   if (animationRef.current) {
+  //     window.clearInterval(animationRef.current);
+  //   }
+  //   setIsPicking(false);
+  // };
 
   const toggleAttendee = (attendeeId: string) => {
     setSelectedAttendees(prev => 
@@ -101,17 +101,17 @@ export default function RandomPicker() {
     setCustomNames(prev => prev.filter(c => c.id !== customId));
   };
 
-  const resetWinner = () => {
-    setWinner(null);
-    setShowWinner(false);
-  };
+  // const resetWinner = () => {
+  //   setWinner(null);
+  //   setShowWinner(false);
+  // };
 
-  const handleSpinAgain = () => {
-    // Clear winner display and immediately start a new spin
-    setShowWinner(false);
-    setWinner(null);
-    startPicking();
-  };
+  // const handleSpinAgain = () => {
+  //   // Clear winner display and immediately start a new spin
+  //   setShowWinner(false);
+  //   setWinner(null);
+  //   startPicking();
+  // };
 
   if (isLoading) {
     return (

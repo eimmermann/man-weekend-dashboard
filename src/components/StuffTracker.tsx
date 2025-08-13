@@ -38,7 +38,7 @@ export default function StuffTracker() {
       setHighlightIndex(-1);
     }, 150);
     return () => { if (abortRef.current) window.clearTimeout(abortRef.current); };
-  }, [thing, items]);
+  }, [thing]);
 
   useEffect(() => {
     // category typeahead from existing categories
@@ -51,7 +51,7 @@ export default function StuffTracker() {
       setCatSuggestions(list);
     }, 150);
     return () => { if (abortCatRef.current) window.clearTimeout(abortCatRef.current); };
-  }, [category, categories]);
+  }, [category]);
 
   useEffect(() => {
     if (!who && attendees.length > 0) setWho(attendees[0].id);

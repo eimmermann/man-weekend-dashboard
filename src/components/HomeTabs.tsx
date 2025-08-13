@@ -31,9 +31,6 @@ export default function HomeTabs() {
   const [tab, setTab] = useState<TabKey>(initialTab);
 
   // Keep state in sync when user navigates via back/forward or shares URL
-  // This effect runs when search params change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const spKey = searchParams.toString();
   if (typeof window !== 'undefined') {
     // lightweight sync without useEffect to avoid hydration warnings with next/navigation
     const t = searchParams.get('tab');
