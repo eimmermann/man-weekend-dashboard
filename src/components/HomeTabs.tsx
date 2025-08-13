@@ -7,6 +7,7 @@ import TotalSpend from '@/components/TotalSpend';
 import TripMap from '@/components/TripMap';
 import { Suspense } from 'react';
 import PokemonOfTheDay from '@/components/PokemonOfTheDay';
+import Countdown from '@/components/Countdown';
 import StuffTracker from '@/components/StuffTracker';
 import PickleballTracker from '@/components/PickleballTracker';
 import RandomPicker from '@/components/RandomPicker';
@@ -14,7 +15,7 @@ import PokerTracker from '@/components/PokerTracker';
 import Schedule from '@/components/Schedule';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-type TabKey = 'planning' | 'weekend' | 'bill';
+type TabKey = 'overview' | 'planning' | 'schedule' | 'games' | 'bill';
 
 export default function HomeTabs() {
   const router = useRouter();
@@ -23,7 +24,8 @@ export default function HomeTabs() {
 
   const initialTab = (() => {
     const t = searchParams.get('tab');
-    return (t === 'planning' || t === 'weekend' || t === 'bill') ? (t as TabKey) : 'planning';
+    const allowed: TabKey[] = ['overview', 'planning', 'schedule', 'games', 'bill'];
+    return (allowed.includes((t as TabKey))) ? (t as TabKey) : 'overview';
   })();
 
   const [tab, setTab] = useState<TabKey>(initialTab);
@@ -35,7 +37,8 @@ export default function HomeTabs() {
   if (typeof window !== 'undefined') {
     // lightweight sync without useEffect to avoid hydration warnings with next/navigation
     const t = searchParams.get('tab');
-    const nextTab: TabKey = (t === 'planning' || t === 'weekend' || t === 'bill') ? (t as TabKey) : 'planning';
+    const allowed: TabKey[] = ['overview', 'planning', 'schedule', 'games', 'bill'];
+    const nextTab: TabKey = allowed.includes((t as TabKey)) ? (t as TabKey) : 'overview';
     if (nextTab !== tab) {
       // set state when URL drives a different tab
       // note: this runs during render but only when values differ; React batches this safely in client components
@@ -54,17 +57,20 @@ export default function HomeTabs() {
   
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-center">
-        <div className="inline-flex items-center gap-2 rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 px-2.5 py-2">
+    <div className="space-y-6 pb-24">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <div className="inline-flex items-center gap-2 rounded-2xl bg-black/40 backdrop-blur-2xl ring-1 ring-white/20 px-2.5 py-2 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.6)]">
+          <TabButton label="Overview" active={tab === 'overview'} onClick={() => handleTabChange('overview')} />
           <TabButton label="Planning" active={tab === 'planning'} onClick={() => handleTabChange('planning')} />
-          <TabButton label="Weekend Of" active={tab === 'weekend'} onClick={() => handleTabChange('weekend')} />
+          <TabButton label="Schedule" active={tab === 'schedule'} onClick={() => handleTabChange('schedule')} />
+          <TabButton label="Games" active={tab === 'games'} onClick={() => handleTabChange('games')} />
           <TabButton label="The Bill" active={tab === 'bill'} onClick={() => handleTabChange('bill')} />
         </div>
       </div>
 
-      {tab === 'planning' && (
+      {tab === 'overview' && (
         <div className="space-y-6">
+          <Countdown />
           <PokemonOfTheDay />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Attendees />
@@ -72,13 +78,23 @@ export default function HomeTabs() {
               <TripMap />
             </Suspense>
           </div>
+        </div>
+      )}
+
+      {tab === 'planning' && (
+        <div className="space-y-6">
           <StuffTracker />
         </div>
       )}
 
-      {tab === 'weekend' && (
+      {tab === 'schedule' && (
         <div className="space-y-6">
           <Schedule />
+        </div>
+      )}
+
+      {tab === 'games' && (
+        <div className="space-y-6">
           <RandomPicker />
           <PokerTracker />
           <PickleballTracker />
