@@ -47,7 +47,7 @@ export default function Schedule() {
 
   // Server persistence via API
   const fetcher = (url: string) => fetch(url).then(r => r.json());
-  const { data: serverActivities, mutate } = useSWR('/api/schedule', fetcher);
+  const { data: serverActivities, mutate } = useSWR<Activity[] | undefined>('/api/schedule', fetcher);
   useEffect(() => { if (Array.isArray(serverActivities)) setActivities(serverActivities); }, [serverActivities]);
 
   const dayToActivities = useMemo(() => {

@@ -9,9 +9,9 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 export default function RandomPicker() {
   const { data: attendees, isLoading } = useSWR<Attendee[]>('/api/attendees', fetcher);
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
-  const [isPicking, setIsPicking] = useState(false);
-  const [winner, setWinner] = useState<Attendee | null>(null);
-  const [showWinner, setShowWinner] = useState(false);
+  // const [isPicking, setIsPicking] = useState(false);
+  // const [winner, setWinner] = useState<Attendee | null>(null);
+  // const [showWinner, setShowWinner] = useState(false);
   const [customName, setCustomName] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customNames, setCustomNames] = useState<{ id: string; name: string }[]>([]);
@@ -126,7 +126,7 @@ export default function RandomPicker() {
 
   const availableAttendees = attendees?.filter(a => selectedAttendees.includes(a.id)) || [];
   const selectedCustomNames = customNames.filter(c => selectedAttendees.includes(c.id));
-  const allNames = [
+  // const allNames = [
     ...availableAttendees.map(a => ({ id: a.id, name: a.name, type: 'attendee' as const })),
     ...selectedCustomNames.map(c => ({ id: c.id, name: c.name, type: 'custom' as const }))
   ];

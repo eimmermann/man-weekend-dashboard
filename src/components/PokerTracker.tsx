@@ -113,7 +113,7 @@ export default function PokerTracker() {
       else if (sort.field === 'cashOut') { av = a.cashOut; bv = b.cashOut; }
       else if (sort.field === 'net') { av = a.net; bv = b.net; }
       if (av === bv) return 0;
-      const res = (av as any) > (bv as any) ? 1 : -1;
+      const res = String(av) > String(bv) ? 1 : -1;
       return sort.dir === 'asc' ? res : -res;
     });
     return items;
@@ -143,7 +143,7 @@ export default function PokerTracker() {
       alert('All players must be finished before marking the game as finished.');
       return;
     }
-      const totalNet = game.players.reduce((sum, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
+      const totalNet = game.players.reduce((sum, p) => sum + (Number((p.cashOut as number)) - Number((p.buyIn as number))), 0);
     const rounded = Math.round(totalNet * 100) / 100;
     if (rounded !== 0) {
       setFinishBlockModal({ amount: rounded });
@@ -168,7 +168,7 @@ export default function PokerTracker() {
   function openCashOut(gameId: string, playerId: string) {
     const { game, player } = findPlayer(gameId, playerId);
     if (game && player) {
-      const totalNet = game.players.reduce((sum, p: any) => sum + (Number(p.cashOut) - Number(p.buyIn)), 0);
+      const totalNet = game.players.reduce((sum, p) => sum + (Number(p.cashOut) - Number(p.buyIn)), 0);
       const suggested = Number((Number(player.cashOut) - totalNet).toFixed(2));
       const clamped = Math.max(0, suggested);
       setAmount(clamped.toFixed(2));
@@ -483,10 +483,10 @@ export default function PokerTracker() {
   );
 }
 
-function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={`px-3 py-1.5 rounded-full text-sm ${active ? 'bg-indigo-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}>{label}</button>
-  );
-}
+// function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+//   return (
+//     <button onClick={onClick} className={`px-3 py-1.5 rounded-full text-sm ${active ? 'bg-indigo-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}>{label}</button>
+//   );
+// }
 
 
