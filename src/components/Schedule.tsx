@@ -308,8 +308,8 @@ export default function Schedule() {
                           style={{ top: (drag.startMin / 60) * HOUR_PX, height: Math.max(24, ((drag.endMin - drag.startMin) / 60) * HOUR_PX) }}
                         />
                       )}
-                      {/* click capture layer for empty slots */}
-                      <div className="absolute inset-0 z-0" onClick={(ev) => handleColumnClick(ev, key)} />
+                       {/* double-click (desktop) and long-press (mobile) capture layer for empty slots */}
+                       <PressableCapture onActivate={(ev) => handleColumnClick(ev as unknown as React.MouseEvent<HTMLDivElement>, key)} />
                     </div>
                   </div>
                 );
@@ -321,8 +321,8 @@ export default function Schedule() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowModal(false)} />
-          <div className="relative z-10 w-[min(560px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowModal(false)} />
+          <div className="modal-dark relative z-10 w-[min(560px,92vw)] rounded-xl bg-white/10 backdrop-blur-2xl ring-1 ring-white/15 p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">{editId ? 'Edit Activity' : 'Add Activity'}</div>
               <button onClick={() => setShowModal(false)} className="opacity-70 hover:opacity-100">×</button>
@@ -334,16 +334,16 @@ export default function Schedule() {
               </div>
               <div>
                 <label className="block text-sm mb-1">Date</label>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} min={format(tripStart, "yyyy-MM-dd")} max={format(tripEnd, "yyyy-MM-dd")} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" />
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} min={format(tripStart, "yyyy-MM-dd")} max={format(tripEnd, "yyyy-MM-dd")} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2 text-slate-100" style={{ colorScheme: 'dark' }} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm mb-1">Start</label>
-                  <input type="time" value={start} onChange={e => setStart(e.target.value)} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" />
+                  <input type="time" value={start} onChange={e => setStart(e.target.value)} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2 text-slate-100" style={{ colorScheme: 'dark' }} />
                 </div>
                 <div>
                   <label className="block text-sm mb-1">End</label>
-                  <input type="time" value={end} onChange={e => setEnd(e.target.value)} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" />
+                  <input type="time" value={end} onChange={e => setEnd(e.target.value)} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2 text-slate-100" style={{ colorScheme: 'dark' }} />
                 </div>
               </div>
               <div>
@@ -415,6 +415,34 @@ export default function Schedule() {
       )}
     </div>
   );
+}
+
+function PressableCapture({ onActivate }: { onActivate: (ev: Event) => void }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handleDbl = (e: MouseEvent) => onActivate(e);
+    const handleTouchStart = (e: TouchEvent) => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      timerRef.current = window.setTimeout(() => onActivate(e), 500);
+    };
+    const handleTouchEnd = () => {
+      if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = null; }
+    };
+    el.addEventListener('dblclick', handleDbl);
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchend', handleTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('dblclick', handleDbl);
+      el.removeEventListener('touchstart', handleTouchStart as EventListener);
+      el.removeEventListener('touchend', handleTouchEnd as EventListener);
+      el.removeEventListener('touchcancel', handleTouchEnd as EventListener);
+    };
+  }, [onActivate]);
+  return <div ref={ref} className="absolute inset-0 z-0" />;
 }
 
 function buildDays(start: Date, end: Date): Date[] {

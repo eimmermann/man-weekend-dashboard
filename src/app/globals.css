@@ -87,3 +87,20 @@ body {
 }
 
 /* (padding for native picker icons removed per request) */
+
+/* Strong white icons and text inside darker modals */
+.modal-dark input[type="date"],
+.modal-dark input[type="time"] {
+  color: #ffffff;
+}
+
+.modal-dark input[type="date"]::-webkit-calendar-picker-indicator,
+.modal-dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.8) contrast(1.5);
+  opacity: 1;
+}
+
+.modal-dark input[type="time"]::-webkit-inner-spin-button,
+.modal-dark input[type="time"]::-webkit-clear-button {
+  filter: invert(1) brightness(1.4);
+}

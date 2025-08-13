@@ -61,7 +61,7 @@ export default function HomeTabs() {
           <TabButton label="Planning" active={tab === 'planning'} onClick={() => handleTabChange('planning')} />
           <TabButton label="Schedule" active={tab === 'schedule'} onClick={() => handleTabChange('schedule')} />
           <TabButton label="Games" active={tab === 'games'} onClick={() => handleTabChange('games')} />
-          <TabButton label="The Bill" active={tab === 'bill'} onClick={() => handleTabChange('bill')} />
+          <TabButton label="Money" active={tab === 'bill'} onClick={() => handleTabChange('bill')} />
         </div>
       </div>
 
