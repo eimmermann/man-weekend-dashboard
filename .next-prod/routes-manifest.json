@@ -42,6 +42,14 @@
         "nxtPgameId": "nxtPgameId"
       },
       "namedRegex": "^/api/poker/(?<nxtPgameId>[^/]+?)/players(?:/)?$"
+    },
+    {
+      "page": "/api/schedule/[id]",
+      "regex": "^/api/schedule/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/schedule/(?<nxtPid>[^/]+?)(?:/)?$"
     }
   ],
   "staticRoutes": [

@@ -10,7 +10,7 @@ const upsertSchema = z.object({
   status: z.enum(['active', 'finished']).optional(),
 });
 
-export async function POST(req: Request, context: { params: Record<string, string> }) {
+export async function POST(req: Request, context: any) {
   try {
     const gameId = String(context?.params?.gameId || '');
     const body = await req.json();

@@ -19,7 +19,8 @@
 # Next.js build and development artifacts
 .next-check/
 .next-prod/
-
+/.next-check/
+/.next-prod/
 # production
 /build
 
