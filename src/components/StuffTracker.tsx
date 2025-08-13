@@ -140,13 +140,13 @@ export default function StuffTracker() {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <h3 className="text-lg font-semibold">Stuff To Bring</h3>
 
       <form onSubmit={addEntry} className="mt-4 grid grid-cols-1 lg:grid-cols-4 gap-3 items-start">
         <div className="relative">
           <input
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+            className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
             placeholder="Thing (e.g., paper towels)"
             value={thing}
             onChange={e => setThing(e.target.value)}
@@ -163,13 +163,13 @@ export default function StuffTracker() {
             }}
           />
           {open && suggestions.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg">
+            <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-lg bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-lg">
               {suggestions.map((s, idx) => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => chooseSuggestion(s.name)}
-                  className={`block w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 ${idx === highlightIndex ? 'bg-zinc-50 dark:bg-zinc-800' : ''}`}
+                  className={`block w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${idx === highlightIndex ? 'bg-white/10' : ''}`}
                 >
                   {toTitleCase(s.name)}
                 </button>
@@ -184,7 +184,7 @@ export default function StuffTracker() {
             id="qty"
             type="number"
             min={1}
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+            className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
             value={qty}
             onChange={e => setQty(Math.max(1, Number(e.target.value) || 1))}
           />
@@ -192,7 +192,7 @@ export default function StuffTracker() {
 
         <div className="relative">
           <input
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+            className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
             placeholder="Category (e.g., kitchen, games)"
             value={category}
             onChange={e => setCategory(e.target.value)}
@@ -201,13 +201,13 @@ export default function StuffTracker() {
             ref={catInputRef}
           />
           {catOpen && catSuggestions.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg">
+            <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-lg bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-lg">
               {catSuggestions.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => { setCategory(toTitleCase(c)); setCatOpen(false); }}
-                  className={`block w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800`}
+                  className={`block w-full text-left px-3 py-2 text-sm hover:bg-white/10`}
                 >
                   {toTitleCase(c)}
                 </button>
@@ -218,7 +218,7 @@ export default function StuffTracker() {
 
         <div className="flex items-center gap-2">
           <select
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2"
+            className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
             value={who}
             onChange={e => setWho(e.target.value)}
           >
@@ -226,7 +226,7 @@ export default function StuffTracker() {
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-          <button type="submit" className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-2 text-sm">Add</button>
+          <button type="submit" className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-2 text-sm">Add</button>
         </div>
       </form>
 
@@ -234,10 +234,10 @@ export default function StuffTracker() {
         {sortedEntries.length === 0 ? (
           <div className="py-3 text-sm opacity-70">No items yet</div>
         ) : (
-          <div className="overflow-x-auto">
+			<div className="overflow-x-auto pr-2">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left border-b border-zinc-200 dark:border-zinc-800">
+                <tr className="text-left border-b border-white/10">
                   <th className="py-2 pr-3">
                     <button type="button" onClick={() => toggleSort('thing')} className="hover:underline">
                       Thing {sortKey === 'thing' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
@@ -268,14 +268,14 @@ export default function StuffTracker() {
               </thead>
               <tbody>
                 {sortedEntries.map(e => (
-                  <tr key={e.id} className="border-b border-zinc-100 dark:border-zinc-800">
+                  <tr key={e.id} className="border-b border-white/10">
                     <td className="py-2 pr-3 font-medium capitalize">{e.itemName}</td>
                     <td className="py-2 px-3">{e.itemCategory ? toTitleCase(e.itemCategory) : <span className="opacity-50">—</span>}</td>
                     <td className="py-2 px-3">{e.quantity}</td>
                     <td className="py-2 px-3">{attendeeById.get(e.attendeeId) || e.attendeeName}</td>
                     <td className="py-2 pl-3 whitespace-nowrap">{formatDate(e.createdAt)}</td>
-                    <td className="py-2 pl-3 text-right">
-                      <button type="button" className="rounded-md border px-2 py-1 text-xs" onClick={() => removeEntry(e.id)} title="Remove">🗑️</button>
+						<td className="py-2 pl-3 pr-2 text-right">
+                      <button type="button" className="rounded-md ring-1 ring-rose-400/40 text-rose-300 px-2 py-1 text-xs hover:bg-rose-500/10" onClick={() => removeEntry(e.id)} title="Remove">🗑️</button>
                     </td>
                   </tr>
                 ))}

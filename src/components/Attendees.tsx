@@ -190,13 +190,13 @@ export default function Attendees() {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Attendees</h3>
         <button
           type="button"
           onClick={() => setAddOpen(true)}
-          className="text-xs rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5"
+          className="text-xs rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5"
         >
           Join Man Weekend
         </button>
@@ -205,7 +205,7 @@ export default function Attendees() {
       {error && (
         <div className="mt-3 text-sm text-rose-600 dark:text-rose-400">{error}</div>
       )}
-      <div className="mt-4 divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div className="mt-4 divide-y divide-white/10">
         {isLoading && <div className="py-3 text-sm opacity-70">Loading…</div>}
         {attendees?.length ? attendees.map(a => (
           <div key={a.id} className="py-3 flex items-center justify-between">
@@ -229,7 +229,7 @@ export default function Attendees() {
                 type="button"
                 onClick={() => setEditOpen(a)}
                 title="Edit attendee"
-                className={`rounded-md border px-2 py-1 text-xs hover:bg-amber-50 dark:hover:bg-amber-900/20 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300`}
+                className={`rounded-md ring-1 ring-amber-400/40 text-amber-300 px-2 py-1 text-xs hover:bg-amber-400/10`}
                 aria-label={`Edit ${a.name}`}
               >
                 ✏️
@@ -239,7 +239,7 @@ export default function Attendees() {
                 onClick={() => setConfirm({ id: a.id, name: a.name })}
                 disabled={deletingId === a.id}
                 title="Remove attendee"
-                className={`rounded-md border px-2 py-1 text-xs transition-colors ${deletingId === a.id ? 'opacity-50 cursor-not-allowed' : 'hover:bg-rose-50 dark:hover:bg-rose-900/20'} border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300`}
+                className={`rounded-md px-2 py-1 text-xs transition-colors ${deletingId === a.id ? 'opacity-50 cursor-not-allowed' : 'hover:bg-rose-500/10'} ring-1 ring-rose-400/40 text-rose-300`}
                 aria-label={`Remove ${a.name}`}
               >
                 🗑️
@@ -251,11 +251,11 @@ export default function Attendees() {
       {addOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!submitting && setAddOpen(false))} />
-          <div className="relative z-[1001] w-[92%] max-w-md rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-5">
+          <div className="relative z-[1001] w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
             <h4 className="text-base font-semibold">Join Man Weekend</h4>
             <form onSubmit={onSubmit} className="mt-4 grid grid-cols-1 gap-3">
               <input
-                className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 placeholder="Your name"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -263,14 +263,14 @@ export default function Attendees() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="date"
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                  className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                   placeholder="Arrival date"
                   value={arrivalDate}
                   onChange={e => setArrivalDate(e.target.value)}
                 />
                 <input
                   type="date"
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                  className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                   placeholder="Departure date"
                   value={departureDate}
                   onChange={e => setDepartureDate(e.target.value)}
@@ -278,7 +278,7 @@ export default function Attendees() {
               </div>
               <div className="relative">
                 <input
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                   placeholder="Starting address"
                   value={address}
                   onChange={e => setAddress(e.target.value)}
@@ -295,7 +295,7 @@ export default function Attendees() {
                   }}
                 />
                 {open && (
-                  <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg">
+                  <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-lg bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-lg">
                     {loadingSuggestions && (
                       <div className="px-3 py-2 text-sm opacity-60">Searching…</div>
                     )}
@@ -307,7 +307,7 @@ export default function Attendees() {
                         key={s.id}
                         type="button"
                         onClick={() => chooseSuggestion(s)}
-                    className={`block w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 ${idx === highlightIndex ? 'bg-zinc-50 dark:bg-zinc-800' : ''}`}
+                        className={`block w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${idx === highlightIndex ? 'bg-white/10' : ''}`}
                       >
                         {s.label}
                       </button>
@@ -317,8 +317,8 @@ export default function Attendees() {
               </div>
               
               <div className="flex justify-end gap-2 mt-2">
-                <button type="button" className="rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm" onClick={() => setAddOpen(false)} disabled={submitting}>Cancel</button>
-                <button type="submit" disabled={submitting} className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 text-sm">{submitting ? 'Adding…' : 'Join'}</button>
+                <button type="button" className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm" onClick={() => setAddOpen(false)} disabled={submitting}>Cancel</button>
+                <button type="submit" disabled={submitting} className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-3 py-1.5 text-sm">{submitting ? 'Adding…' : 'Join'}</button>
               </div>
             </form>
           </div>
@@ -327,7 +327,7 @@ export default function Attendees() {
       {editOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!submitting && setEditOpen(null))} />
-          <div className="relative z-[1001] w-[92%] max-w-md rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-5">
+          <div className="relative z-[1001] w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
             <h4 className="text-base font-semibold">Edit attendee</h4>
             <EditForm attendee={editOpen} onClose={() => setEditOpen(null)} onSaved={() => { mutate(); setEditOpen(null); }} />
           </div>
@@ -343,14 +343,14 @@ export default function Attendees() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="remove-attendee-title"
-            className="relative z-[1001] w-[92%] max-w-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-5"
+            className="relative z-[1001] w-[92%] max-w-sm rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5"
           >
             <h4 id="remove-attendee-title" className="text-base font-semibold">Remove attendee?</h4>
             <p className="mt-2 text-sm opacity-80">Are you sure you want to remove <span className="font-medium">{confirm.name}</span>? This action cannot be undone.</p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm"
                 onClick={() => setConfirm(null)}
                 disabled={!!deletingId}
               >
@@ -358,7 +358,7 @@ export default function Attendees() {
               </button>
               <button
                 type="button"
-                className={`rounded-md px-3 py-1.5 text-sm text-white ${deletingId ? 'bg-rose-500 opacity-70 cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-500'}`}
+                className={`rounded-xl px-3 py-1.5 text-sm text-white ${deletingId ? 'bg-rose-600/70 opacity-70 cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-500'}`}
                 onClick={() => onDelete(confirm.id)}
                 disabled={!!deletingId}
               >
@@ -429,14 +429,14 @@ function EditForm({ attendee, onClose, onSaved }: { attendee: import('@/types').
 
   return (
     <form onSubmit={onSubmit} className="mt-4 grid grid-cols-1 gap-3">
-      <input className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+      <input className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="date" className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} />
-                <input type="date" className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
+        <input type="date" className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" value={arrivalDate} onChange={e => setArrivalDate(e.target.value)} />
+        <input type="date" className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
       </div>
       <div className="relative">
         <input
-          className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+          className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
           placeholder="Starting address"
           value={address}
           onChange={e => setAddress(e.target.value)}
@@ -453,13 +453,13 @@ function EditForm({ attendee, onClose, onSaved }: { attendee: import('@/types').
           }}
         />
         {open && suggestions.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg">
+          <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-lg bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-lg">
             {suggestions.map((s, idx) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => chooseSuggestion(s)}
-                className={`block w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 ${idx === highlightIndex ? 'bg-zinc-50 dark:bg-zinc-800' : ''}`}
+                className={`block w-full text-left px-3 py-2 text-sm hover:bg-white/10 ${idx === highlightIndex ? 'bg-white/10' : ''}`}
               >
                 {s.label}
               </button>
@@ -469,8 +469,8 @@ function EditForm({ attendee, onClose, onSaved }: { attendee: import('@/types').
       </div>
       
       <div className="flex justify-end gap-2 mt-2">
-        <button type="button" className="rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm" onClick={onClose} disabled={saving}>Cancel</button>
-        <button type="submit" disabled={saving} className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 text-sm">{saving ? 'Saving…' : 'Save'}</button>
+        <button type="button" className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm" onClick={onClose} disabled={saving}>Cancel</button>
+        <button type="submit" disabled={saving} className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-3 py-1.5 text-sm">{saving ? 'Saving…' : 'Save'}</button>
       </div>
     </form>
   );

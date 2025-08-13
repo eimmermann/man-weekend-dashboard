@@ -64,13 +64,13 @@ export default function Expenses() {
   useMemo(() => calculateTotals(attendees, expenses), [attendees, expenses]);
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Expenses</h3>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="text-xs rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5"
+          className="text-xs rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5"
         >
           Add Expense
         </button>
@@ -79,12 +79,12 @@ export default function Expenses() {
       {open && (
         <div className="fixed inset-0 z-30 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!submitting && setOpen(false))} />
-          <div className="relative z-40 w-[92%] max-w-md rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-5">
+          <div className="relative z-40 w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
             <h4 className="text-base font-semibold">Add expense</h4>
             <form onSubmit={addExpense} className="mt-4 grid grid-cols-1 gap-3">
-              <input className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2" placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} />
+              <input className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} />
               <input
-                className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 placeholder="$0.00"
                 inputMode="decimal"
                 value={amount}
@@ -102,11 +102,11 @@ export default function Expenses() {
               />
               <input
                 type="date"
-                className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2"
+                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 value={date}
                 onChange={e => setDate(e.target.value)}
               />
-              <select className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2" value={payerId} onChange={e => setPayerId(e.target.value)}>
+              <select className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" value={payerId} onChange={e => setPayerId(e.target.value)}>
                 <option value="">Payer</option>
                 {attendees.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
@@ -119,7 +119,7 @@ export default function Expenses() {
                       key={a.id}
                       type="button"
                       onClick={() => setBeneficiaryIds(ids => selected ? ids.filter(id => id !== a.id) : [...ids, a.id])}
-                      className={`text-sm rounded-full px-3 py-1 border ${selected ? 'bg-indigo-600 text-white border-indigo-600' : 'border-zinc-300 dark:border-zinc-700'}`}
+                      className={`text-sm rounded-full px-3 py-1 ${selected ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white' : 'ring-1 ring-white/15 hover:bg-white/10'}`}
                     >
                       {a.name}
                     </button>
@@ -127,8 +127,8 @@ export default function Expenses() {
                 })}
               </div>
               <div className="flex justify-end gap-2 mt-2">
-                <button type="button" className="rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm" onClick={() => setOpen(false)} disabled={submitting}>Cancel</button>
-                <button type="submit" disabled={submitting} className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 text-sm">{submitting ? 'Adding…' : 'Add expense'}</button>
+                <button type="button" className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm" onClick={() => setOpen(false)} disabled={submitting}>Cancel</button>
+                <button type="submit" disabled={submitting} className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-3 py-1.5 text-sm">{submitting ? 'Adding…' : 'Add expense'}</button>
               </div>
             </form>
           </div>
@@ -142,7 +142,7 @@ export default function Expenses() {
           const beneficiaries = attendees.filter(a => e.beneficiaryIds.includes(a.id));
           const share = beneficiaries.length ? e.amount / beneficiaries.length : 0;
           return (
-            <div key={e.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+            <div key={e.id} className="rounded-xl ring-1 ring-white/10 bg-white/5 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-medium break-words">{e.description}</div>
@@ -157,7 +157,7 @@ export default function Expenses() {
                         await fetch(`/api/expenses?id=${encodeURIComponent(e.id)}`, { method: 'DELETE' });
                         mutateExpenses();
                       }}
-                      className="rounded-md border border-rose-300 text-rose-700 dark:border-rose-800 dark:text-rose-300 px-2 py-1 text-xs hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                      className="rounded-md ring-1 ring-rose-400/40 text-rose-300 px-2 py-1 text-xs hover:bg-rose-500/10"
                       title="Delete expense"
                       aria-label="Delete expense"
                     >
@@ -177,7 +177,7 @@ export default function Expenses() {
                       await fetch('/api/expenses', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expenseId: e.id, beneficiaryIds: everyone }) });
                       mutateExpenses();
                     }}
-                    className="rounded-full bg-emerald-600 hover:bg-emerald-500 text-white h-6 w-6 flex items-center justify-center text-sm"
+                    className="rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white h-6 w-6 flex items-center justify-center text-sm"
                     title="Add people"
                     aria-label="Add people"
                   >
@@ -186,11 +186,11 @@ export default function Expenses() {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {beneficiaries.map(b => (
-                    <div key={b.id} className="text-xs rounded-full px-2 py-1 border border-zinc-300 dark:border-zinc-700 flex items-center gap-1">
+                    <div key={b.id} className="text-xs rounded-full px-2 py-1 ring-1 ring-white/10 flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => togglePaid(e.id, b.id)}
-                        className={`h-5 w-5 flex items-center justify-center rounded-full ${e.paidByBeneficiary[b.id] ? 'bg-emerald-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}
+                        className={`h-5 w-5 flex items-center justify-center rounded-full ${e.paidByBeneficiary[b.id] ? 'bg-emerald-600 text-white' : 'bg-white/10'}`}
                         title={`Mark ${b.name} ${e.paidByBeneficiary[b.id] ? 'unpaid' : 'paid'} (share $${share.toFixed(2)})`}
                       >
                         {e.paidByBeneficiary[b.id] ? '✓' : ''}
@@ -203,7 +203,7 @@ export default function Expenses() {
                           await fetch('/api/expenses', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expenseId: e.id, beneficiaryIds: newIds }) });
                           mutateExpenses();
                         }}
-                        className="ml-1 rounded-full border border-rose-300 text-rose-700 dark:border-rose-700 dark:text-rose-300 h-5 w-5 flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                        className="ml-1 rounded-full ring-1 ring-rose-400/40 text-rose-300 h-5 w-5 flex items-center justify-center hover:bg-rose-500/10"
                         aria-label={`Remove ${b.name}`}
                         title={`Remove ${b.name}`}
                       >

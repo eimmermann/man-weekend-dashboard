@@ -32,7 +32,7 @@ export default function PokemonOfTheDay() {
   const poke = usePokemonByDex(dex);
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Pokémon of the Day</h3>
       </div>

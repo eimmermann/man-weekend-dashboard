@@ -315,17 +315,17 @@ export default function PickleballTracker() {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold">Pickleball</h3>
         <div className="flex items-center gap-3">
-          <div className="flex rounded-lg border border-zinc-300 dark:border-zinc-700">
+          <div className="flex rounded-lg ring-1 ring-white/10 bg-white/5">
             <button
               onClick={() => setView('games')}
               className={`px-3 py-1.5 text-sm rounded-l-lg ${
                 view === 'games'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white'
+                  : 'hover:bg-white/10'
               }`}
             >
               Games
@@ -334,8 +334,8 @@ export default function PickleballTracker() {
               onClick={() => setView('summary')}
               className={`px-3 py-1.5 text-sm rounded-r-lg ${
                 view === 'summary'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white'
+                  : 'hover:bg-white/10'
               }`}
             >
               Summary
@@ -343,7 +343,7 @@ export default function PickleballTracker() {
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 text-sm"
+            className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5 text-sm"
           >
             Add Game
           </button>
@@ -351,8 +351,8 @@ export default function PickleballTracker() {
       </div>
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white/5 backdrop-blur-xl ring-1 ring-white/10 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h4 className="text-lg font-semibold mb-4">Add Pickleball Game</h4>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -360,14 +360,14 @@ export default function PickleballTracker() {
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2"
+                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                   required
                 />
                 <input
                   type="time"
                   value={time}
                   onChange={e => setTime(e.target.value)}
-                  className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 />
               </div>
               
@@ -376,7 +376,7 @@ export default function PickleballTracker() {
                 placeholder="Location (optional)"
                 value={location}
                 onChange={e => setLocation(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
               />
 
               <div className="space-y-3">
@@ -384,7 +384,7 @@ export default function PickleballTracker() {
                 <select
                   value={team1Player1Id}
                   onChange={e => setTeam1Player1Id(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2"
+                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                   required
                 >
                   <option value="">Select Player 1</option>
@@ -395,7 +395,7 @@ export default function PickleballTracker() {
                 <select
                   value={team1Player2Id}
                   onChange={e => setTeam1Player2Id(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2"
+                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 >
                   <option value="">Select Player 2 (optional)</option>
                   {attendees.map(attendee => (
@@ -409,7 +409,7 @@ export default function PickleballTracker() {
                 <select
                   value={team2Player1Id}
                   onChange={e => setTeam2Player1Id(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2"
+                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                   required
                 >
                   <option value="">Select Player 1</option>
@@ -420,7 +420,7 @@ export default function PickleballTracker() {
                 <select
                   value={team2Player2Id}
                   onChange={e => setTeam2Player2Id(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2"
+                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 >
                   <option value="">Select Player 2 (optional)</option>
                   {attendees.map(attendee => (
@@ -437,7 +437,7 @@ export default function PickleballTracker() {
                     min="0"
                     value={team1Score}
                     onChange={e => setTeam1Score(parseInt(e.target.value) || 0)}
-                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                    className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                     required
                   />
                 </div>
@@ -448,7 +448,7 @@ export default function PickleballTracker() {
                     min="0"
                     value={team2Score}
                     onChange={e => setTeam2Score(parseInt(e.target.value) || 0)}
-                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                    className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                     required
                   />
                 </div>
@@ -458,7 +458,7 @@ export default function PickleballTracker() {
                 placeholder="Notes (optional)"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2"
+                className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
                 rows={3}
               />
 
@@ -466,7 +466,7 @@ export default function PickleballTracker() {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm"
+                  className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm"
                   disabled={saving}
                 >
                   Cancel
@@ -474,7 +474,7 @@ export default function PickleballTracker() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 text-sm"
+                  className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-3 py-1.5 text-sm"
                 >
                   {saving ? 'Saving…' : 'Save Game'}
                 </button>
@@ -614,7 +614,7 @@ export default function PickleballTracker() {
            <p className="text-sm opacity-70">No games recorded yet. Add the first game!</p>
          ) : (
           games.map(game => (
-            <div key={game.id} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+            <div key={game.id} className="rounded-xl p-4 bg-white/5 backdrop-blur-lg ring-1 ring-white/10">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <div className="font-medium">
@@ -625,16 +625,16 @@ export default function PickleballTracker() {
                     <div className="text-sm opacity-70">{game.location}</div>
                   )}
                 </div>
-                                 <button
+                 <button
                    onClick={() => handleDeleteClick(game)}
-                   className="text-red-500 hover:text-red-700 text-sm"
+                   className="text-rose-300 hover:text-rose-200 text-sm"
                  >
                    🗑️
                  </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-3">
-                <div className={`p-3 rounded-lg ${game.winner === 'team1' ? 'bg-green-100 dark:bg-green-900' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                <div className={`p-3 rounded-lg ring-1 ring-white/10 ${game.winner === 'team1' ? 'bg-emerald-500/15' : 'bg-white/5'}`}>
                   <div className="font-medium">Team 1</div>
                   <div className="text-sm">
                     {getAttendeeName(game.team1Player1Id)}
@@ -642,7 +642,7 @@ export default function PickleballTracker() {
                   </div>
                   <div className="text-lg font-bold">{game.team1Score}</div>
                 </div>
-                <div className={`p-3 rounded-lg ${game.winner === 'team2' ? 'bg-green-100 dark:bg-green-900' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                <div className={`p-3 rounded-lg ring-1 ring-white/10 ${game.winner === 'team2' ? 'bg-emerald-500/15' : 'bg-white/5'}`}>
                   <div className="font-medium">Team 2</div>
                   <div className="text-sm">
                     {getAttendeeName(game.team2Player1Id)}

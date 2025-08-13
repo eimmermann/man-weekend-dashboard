@@ -146,7 +146,7 @@ export default function RandomPicker() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+      <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
         <div className="text-center py-8">
           <div className="text-lg font-semibold mb-2">Random Picker</div>
           <div className="text-sm opacity-70">Loading attendees...</div>
@@ -164,13 +164,13 @@ export default function RandomPicker() {
   const facesToRender = wheelFaces.length > 0 ? wheelFaces : allNames.slice(0, 20);
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold">Random Picker</h3>
         <button
           type="button"
           onClick={() => setShowCustomInput(true)}
-          className="text-xs rounded-md bg-green-600 hover:bg-green-500 text-white font-medium px-3 py-1.5"
+          className="text-xs rounded-xl bg-white/10 hover:bg-white/15 text-white ring-1 ring-white/15 font-medium px-3 py-1.5"
         >
           Add Custom Name
         </button>
@@ -178,26 +178,26 @@ export default function RandomPicker() {
 
       {/* Custom name input */}
       {showCustomInput && (
-        <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+        <div className="mb-4 p-3 rounded-xl bg-white/5 backdrop-blur-lg ring-1 ring-white/10">
           <div className="flex gap-2">
             <input
               type="text"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="Enter custom name"
-              className="flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-1.5 text-sm"
+              className="flex-1 rounded-md ring-1 ring-white/10 bg-transparent px-3 py-1.5 text-sm text-slate-100 placeholder:text-slate-300/60"
               onKeyDown={(e) => e.key === 'Enter' && addCustomName()}
             />
             <button
               onClick={addCustomName}
               disabled={!customName.trim()}
-              className="rounded-md bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-medium px-3 py-1.5 text-sm"
+              className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 disabled:opacity-50 text-white font-medium px-3 py-1.5 text-sm"
             >
               Add
             </button>
             <button
               onClick={() => setShowCustomInput(false)}
-              className="rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm"
+              className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm"
             >
               Cancel
             </button>
@@ -217,8 +217,8 @@ export default function RandomPicker() {
                     onClick={() => toggleAttendee(attendee.id)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all w-fit ${
                       selectedAttendees.includes(attendee.id)
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                        ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow'
+                        : 'ring-1 ring-white/15 text-slate-100 hover:bg-white/10'
                     }`}
                   >
                     {attendee.name}
@@ -226,12 +226,12 @@ export default function RandomPicker() {
                 ))}
                 {selectedCustomNames.map(customName => (
                   <div key={customName.id} className="flex items-center gap-1 w-fit">
-                    <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-green-600 text-white shadow-md">
+                    <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow">
                       {customName.name}
                     </span>
                     <button
                       onClick={() => removeCustomName(customName.id)}
-                      className="text-xs text-rose-600 hover:text-rose-500 p-1"
+                      className="text-xs text-rose-300 hover:text-rose-200 p-1"
                       title="Remove"
                     >
                       ×
@@ -284,7 +284,7 @@ export default function RandomPicker() {
                 <button
                   onClick={startPicking}
                   disabled={allNames.length === 0}
-                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg text-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl text-lg"
                 >
                   Spin the Wheel!
                 </button>
@@ -308,7 +308,7 @@ export default function RandomPicker() {
                   </div>
                   <button
                     onClick={handleSpinAgain}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg mx-auto"
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium rounded-xl mx-auto"
                   >
                     Spin Again
                   </button>

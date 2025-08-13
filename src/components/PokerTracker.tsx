@@ -218,16 +218,16 @@ export default function PokerTracker() {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900">
+    <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold">Poker</h3>
         <div className="flex items-center gap-3">
-          <div className="flex rounded-lg border border-zinc-300 dark:border-zinc-700">
-            <button onClick={() => setView('games')} className={`px-3 py-1.5 text-sm rounded-l-lg ${view === 'games' ? 'bg-indigo-600 text-white' : 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>Games</button>
-            <button onClick={() => setView('summary')} className={`px-3 py-1.5 text-sm ${view === 'summary' ? 'bg-indigo-600 text-white' : 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>Summary</button>
-            <button onClick={() => setView('bill')} className={`px-3 py-1.5 text-sm rounded-r-lg ${view === 'bill' ? 'bg-indigo-600 text-white' : 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>Bill</button>
+          <div className="flex rounded-lg ring-1 ring-white/10 bg-white/5">
+            <button onClick={() => setView('games')} className={`px-3 py-1.5 text-sm rounded-l-lg ${view === 'games' ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white' : 'hover:bg-white/10'}`}>Games</button>
+            <button onClick={() => setView('summary')} className={`px-3 py-1.5 text-sm ${view === 'summary' ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white' : 'hover:bg-white/10'}`}>Summary</button>
+            <button onClick={() => setView('bill')} className={`px-3 py-1.5 text-sm rounded-r-lg ${view === 'bill' ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white' : 'hover:bg-white/10'}`}>Bill</button>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 text-sm">Add Game</button>
+          <button onClick={() => setIsModalOpen(true)} className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5 text-sm">Add Game</button>
         </div>
       </div>
 
@@ -235,28 +235,28 @@ export default function PokerTracker() {
          <div className="space-y-4">
           <div className="space-y-4">
             {gamesList.map(g => (
-              <div key={g.id} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+              <div key={g.id} className="rounded-xl p-4 bg-white/5 backdrop-blur-lg ring-1 ring-white/10">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="font-medium">{g.date}{g.time ? ` ${g.time}` : ''}</div>
                     <div className="text-xs mt-0.5">
-                      <span className={`inline-block px-2 py-0.5 rounded-full ${g.status === 'finished' ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}>{g.status === 'finished' ? 'Finished' : 'Active'}</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full ring-1 ring-white/15 ${g.status === 'finished' ? 'bg-white/10' : 'bg-emerald-500/20 text-emerald-300'}`}>{g.status === 'finished' ? 'Finished' : 'Active'}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {g.status === 'finished' ? (
-                      <button onClick={() => handleReopenGame(g.id)} className="rounded-md border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs">Reopen</button>
+                      <button onClick={() => handleReopenGame(g.id)} className="rounded-md ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-2 py-1 text-xs">Reopen</button>
                     ) : (
-                      <button onClick={() => handleFinishGame(g.id)} className="rounded-md border border-zinc-300 dark:border-zinc-700 px-2 py-1 text-xs">Mark Finished</button>
+                      <button onClick={() => handleFinishGame(g.id)} className="rounded-md ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-2 py-1 text-xs">Mark Finished</button>
                     )}
-                    <button onClick={() => setDeleteModal({ gameId: g.id })} className="rounded-md border border-rose-300 text-rose-700 dark:border-rose-800 dark:text-rose-300 px-2 py-1 text-xs">Delete</button>
+                    <button onClick={() => setDeleteModal({ gameId: g.id })} className="rounded-md ring-1 ring-rose-400/40 text-rose-300 px-2 py-1 text-xs">Delete</button>
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
                     <thead>
-                      <tr className="border-b border-zinc-200 dark:border-zinc-800 text-left">
+                      <tr className="border-b border-white/10 text-left">
                         <th className="py-2 px-2">
                           <button onClick={() => togglePlayerSort(g.id, 'name')} className="hover:text-indigo-600">Player</button>
                         </th>
@@ -281,11 +281,11 @@ export default function PokerTracker() {
                         </tr>
                       )}
                       {sortedPlayers(g).map(p => (
-                        <tr key={p.id} className="border-b border-zinc-100 dark:border-zinc-800/60">
+                         <tr key={p.id} className="border-b border-white/10">
                           <td className="py-2 px-2">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{p.name}</span>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${p.status === 'finished' ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ring-1 ring-white/15 ${p.status === 'finished' ? 'bg-white/10' : 'bg-emerald-500/20 text-emerald-300'}`}>
                                 {p.status === 'finished' ? 'Finished' : 'Active'}
                               </span>
                             </div>
@@ -298,11 +298,11 @@ export default function PokerTracker() {
                               <div className="inline-flex gap-2">
                                 {p.status === 'active' ? (
                                   <>
-                                    <button onClick={() => openCashOut(g.id, p.id)} className="rounded-md bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 text-xs">Cash Out</button>
-                                    <button onClick={() => handleBust(g.id, p.id)} className="rounded-md bg-rose-600 hover:bg-rose-500 text-white px-2 py-1 text-xs">Bust</button>
+                                    <button onClick={() => openCashOut(g.id, p.id)} className="rounded-md bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-2 py-1 text-xs">Cash Out</button>
+                                    <button onClick={() => handleBust(g.id, p.id)} className="rounded-md bg-rose-600/80 hover:bg-rose-600 text-white px-2 py-1 text-xs">Bust</button>
                                   </>
                                 ) : (
-                                  <button onClick={() => openRebuy(g.id, p.id)} className="rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 text-xs">Rebuy</button>
+                                  <button onClick={() => openRebuy(g.id, p.id)} className="rounded-md bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-2 py-1 text-xs">Rebuy</button>
                                 )}
                               </div>
                             </td>
@@ -334,7 +334,7 @@ export default function PokerTracker() {
           {isModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" onClick={() => setIsModalOpen(false)} />
-              <div className="relative z-10 w-[min(640px,92vw)] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl">
+              <div className="relative z-10 w-[min(640px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-lg font-semibold">New Poker Game</div>
                   <button onClick={() => setIsModalOpen(false)} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -343,8 +343,8 @@ export default function PokerTracker() {
                   <div>
                     <label className="block text-sm mb-1">Date and Time</label>
                     <div className="grid grid-cols-2 gap-3">
-                      <input type="date" value={date} onChange={e => setDate(e.target.value)} className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm w-full" />
-                      <input type="time" value={time} onChange={e => setTime(e.target.value)} className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm w-full" />
+                       <input type="date" value={date} onChange={e => setDate(e.target.value)} className="rounded-md ring-1 ring-white/10 bg-transparent px-3 py-1.5 text-sm w-full" />
+                       <input type="time" value={time} onChange={e => setTime(e.target.value)} className="rounded-md ring-1 ring-white/10 bg-transparent px-3 py-1.5 text-sm w-full" />
                     </div>
                   </div>
                   <div>
@@ -356,12 +356,12 @@ export default function PokerTracker() {
                     <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-1">
                       {rows.map((r, idx) => (
                         <div key={idx} className="grid grid-cols-[minmax(10rem,1fr)_120px_40px] gap-2 items-center">
-                          <select value={r.attendeeId} onChange={e => setRows(prev => prev.map((p, i) => i === idx ? { ...p, attendeeId: e.target.value } : p))} className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1 text-sm">
+                           <select value={r.attendeeId} onChange={e => setRows(prev => prev.map((p, i) => i === idx ? { ...p, attendeeId: e.target.value } : p))} className="rounded-md ring-1 ring-white/10 bg-transparent px-2 py-1 text-sm">
                             {attendees.map(a => (<option key={a.id} value={a.id}>{a.name}</option>))}
                           </select>
                           <div className="relative">
                             <span className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-70">$</span>
-                            <input type="number" min={0} step={0.01} placeholder="0.00" value={r.buyIn} onChange={e => setRows(prev => prev.map((p, i) => i === idx ? { ...p, buyIn: Number(e.target.value) } : p))} className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent pl-5 pr-2 py-1 text-sm w-full" />
+                             <input type="number" min={0} step={0.01} placeholder="0.00" value={r.buyIn} onChange={e => setRows(prev => prev.map((p, i) => i === idx ? { ...p, buyIn: Number(e.target.value) } : p))} className="rounded-md ring-1 ring-white/10 bg-transparent pl-5 pr-2 py-1 text-sm w-full" />
                           </div>
                           <button onClick={() => removeRow(idx)} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-rose-600 hover:text-rose-500" aria-label="Remove">×</button>
                         </div>
@@ -369,8 +369,8 @@ export default function PokerTracker() {
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm">Cancel</button>
-                    <button onClick={createGame} disabled={saving || !date || rows.length === 0} className="px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-500 text-white text-sm disabled:opacity-50">Create Game</button>
+                     <button onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 text-sm">Cancel</button>
+                     <button onClick={createGame} disabled={saving || !date || rows.length === 0} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-sm disabled:opacity-50">Create Game</button>
                   </div>
                 </div>
               </div>
@@ -382,7 +382,7 @@ export default function PokerTracker() {
       {(rebuyModal || cashOutModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => { setRebuyModal(null); setCashOutModal(null); }} />
-          <div className="relative z-10 w-[min(420px,92vw)] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl">
+          <div className="relative z-10 w-[min(420px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">{rebuyModal ? 'Rebuy' : 'Cash Out'}</div>
               <button onClick={() => { setRebuyModal(null); setCashOutModal(null); }} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -392,15 +392,15 @@ export default function PokerTracker() {
                 <label className="block text-sm mb-1">Amount</label>
                 <div className="relative">
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-70">$</span>
-                  <input type="number" min={0} step={0.01} value={amount} onChange={e => setAmount(e.target.value)} className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent pl-5 pr-2 py-1.5 text-sm w-full" />
+                  <input type="number" min={0} step={0.01} value={amount} onChange={e => setAmount(e.target.value)} className="rounded-md ring-1 ring-white/10 bg-transparent pl-5 pr-2 py-1.5 text-sm w-full" />
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => { setRebuyModal(null); setCashOutModal(null); }} className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm">Cancel</button>
+                <button onClick={() => { setRebuyModal(null); setCashOutModal(null); }} className="px-3 py-1.5 rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 text-sm">Cancel</button>
                 {rebuyModal ? (
-                  <button onClick={confirmRebuy} className="px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-500 text-white text-sm">Add Rebuy</button>
+                  <button onClick={confirmRebuy} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-sm">Add Rebuy</button>
                 ) : (
-                  <button onClick={confirmCashOut} className="px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-sm">Set Cash Out</button>
+                  <button onClick={confirmCashOut} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-sm">Set Cash Out</button>
                 )}
               </div>
             </div>
@@ -411,7 +411,7 @@ export default function PokerTracker() {
       {deleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteModal(null)} />
-          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl">
+          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Delete Game</div>
               <button onClick={() => setDeleteModal(null)} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -419,8 +419,8 @@ export default function PokerTracker() {
             <div className="space-y-4">
               <p className="text-sm">Are you sure you want to delete this game? This action cannot be undone.</p>
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => setDeleteModal(null)} className="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm">Cancel</button>
-                <button onClick={async () => { if (deleteModal) { await handleDeleteGame(deleteModal.gameId); setDeleteModal(null); } }} className="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-500 text-white text-sm">Delete</button>
+                <button onClick={() => setDeleteModal(null)} className="px-3 py-1.5 rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 text-sm">Cancel</button>
+                <button onClick={async () => { if (deleteModal) { await handleDeleteGame(deleteModal.gameId); setDeleteModal(null); } }} className="px-3 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-sm">Delete</button>
               </div>
             </div>
           </div>
@@ -430,16 +430,16 @@ export default function PokerTracker() {
       {finishBlockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setFinishBlockModal(null)} />
-          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xl">
+          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Cannot Finish Game</div>
               <button onClick={() => setFinishBlockModal(null)} className="text-zinc-500 hover:text-zinc-700">×</button>
             </div>
             <div className="space-y-4">
               <p className="text-sm">Net total must be exactly $0.00 to finish the game.</p>
-              <p className="text-sm">Current net total: <span className={`${finishBlockModal.amount === 0 ? '' : (finishBlockModal.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}`}>{formatCurrency(finishBlockModal.amount)}</span></p>
+              <p className="text-sm">Current net total: <span className={`${finishBlockModal.amount === 0 ? '' : (finishBlockModal.amount > 0 ? 'text-emerald-400' : 'text-rose-400')}`}>{formatCurrency(finishBlockModal.amount)}</span></p>
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => setFinishBlockModal(null)} className="px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-sm">OK</button>
+                <button onClick={() => setFinishBlockModal(null)} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white text-sm">OK</button>
               </div>
             </div>
           </div>
@@ -449,9 +449,9 @@ export default function PokerTracker() {
       {view === 'summary' && (
         <div className="space-y-2">
           {summaryByAttendee.map(s => (
-            <div key={s.attendeeId} className="flex items-center justify-between rounded-md border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+            <div key={s.attendeeId} className="flex items-center justify-between rounded-md ring-1 ring-white/10 bg-white/5 px-3 py-2">
               <div className="font-medium">{attendeeName(s.attendeeId)}</div>
-              <div className={s.net >= 0 ? 'text-green-600' : 'text-rose-600'}>
+              <div className={s.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                 {formatCurrency(s.net)}
               </div>
             </div>

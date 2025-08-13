@@ -53,7 +53,7 @@ export default function HomeTabs() {
   return (
     <div className="space-y-6">
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-2">
+        <div className="inline-flex items-center gap-2 rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 px-2.5 py-2">
           <TabButton label="Planning" active={tab === 'planning'} onClick={() => handleTabChange('planning')} />
           <TabButton label="Weekend Of" active={tab === 'weekend'} onClick={() => handleTabChange('weekend')} />
           <TabButton label="The Bill" active={tab === 'bill'} onClick={() => handleTabChange('bill')} />
@@ -96,10 +96,10 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2 md:px-5 md:py-2.5 text-sm md:text-base rounded-full transition-colors ${
+      className={`px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-full transition ${
         active
-          ? 'bg-indigo-600 text-white shadow-sm'
-          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+          ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow'
+          : 'ring-1 ring-white/15 text-slate-100 hover:bg-white/10'
       }`}
       aria-current={active ? 'page' : undefined}
     >

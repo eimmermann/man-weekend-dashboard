@@ -34,10 +34,10 @@ export default function Countdown() {
   const parts = secondsToParts(secsToStart);
 
   return (
-    <div className="w-full rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-zinc-900">
+    <div className="w-full rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] bg-white/5 backdrop-blur-xl ring-1 ring-white/10 relative">
       {/* Hero */}
       <div className="relative h-40 md:h-56 w-full">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600" />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 opacity-70" />
         <Image
           src="/house-hero.jpg"
           alt="Trip hero"
@@ -46,7 +46,7 @@ export default function Countdown() {
           sizes="100vw"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between text-white gap-3">
           <h2
             className="text-4xl md:text-6xl font-light md:font-normal leading-tight tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] text-transparent bg-clip-text bg-gradient-to-r from-indigo-100 via-fuchsia-100 to-pink-100"
@@ -57,15 +57,15 @@ export default function Countdown() {
             href={AIRBNB_URL}
             target="_blank"
             rel="noreferrer"
-            className="text-xs md:text-sm bg-white/20 hover:bg-white/30 backdrop-blur rounded-md px-2 py-1 whitespace-nowrap"
+            className="text-xs md:text-sm bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap"
           >
             View Airbnb
           </a>
         </div>
       </div>
       <div className="px-6 pb-6 pt-4">
-        <div className="flex flex-wrap items-center gap-2 text-zinc-900 dark:text-zinc-50">
-          <span className="inline-flex items-center gap-2 rounded-full bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-xs md:text-sm">
+        <div className="flex flex-wrap items-center gap-2 text-slate-100">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1.5 text-xs md:text-sm">
             <span aria-hidden>📅</span>
             {format(start, 'MMM d, yyyy')} → {format(end, 'MMM d, yyyy')}
           </span>
@@ -73,7 +73,7 @@ export default function Countdown() {
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(HOUSE_ADDRESS)}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-3 py-1.5 text-xs md:text-sm break-words"
+            className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 hover:bg-white/15 px-3 py-1.5 text-xs md:text-sm break-words"
           >
             <span aria-hidden>📍</span>
             {HOUSE_ADDRESS}
@@ -83,7 +83,7 @@ export default function Countdown() {
         {['Days','Hours','Minutes','Seconds'].map((label, idx) => {
           const value = [parts.days, parts.hours, parts.minutes, parts.seconds][idx];
           return (
-            <div key={label} className="rounded-xl bg-zinc-50 dark:bg-white/10 backdrop-blur px-3 py-4">
+            <div key={label} className="rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur px-3 py-4">
               <div className="text-3xl font-bold tabular-nums" suppressHydrationWarning>{mounted ? value : 0}</div>
               <div className="text-xs uppercase tracking-wide opacity-70">{label}</div>
             </div>
