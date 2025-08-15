@@ -158,6 +158,22 @@ export async function createExpense(input: { description: string; amount: number
   return exp;
 }
 
+export async function updateExpense(expenseId: string, input: Partial<{ description: string; amount: number; payerId: string; date?: string }>): Promise<Expense | null> {
+  await ensureSchema();
+  const sql = getSql();
+  // Read current
+  const current = await getExpenseById(expenseId);
+  if (!current) return null;
+  const next = {
+    description: input.description != null ? input.description.trim() : current.description,
+    amount: input.amount != null ? Math.max(0, Number(input.amount)) : current.amount,
+    payerId: input.payerId != null ? input.payerId : current.payerId,
+    date: input.date !== undefined ? (input.date || undefined) : current.date,
+  };
+  await sql`update expenses set description = ${next.description}, amount = ${next.amount}, payer_id = ${next.payerId}, date = ${next.date ?? null} where id = ${expenseId}`;
+  return getExpenseById(expenseId);
+}
+
 export async function toggleBeneficiaryPaid(expenseId: string, beneficiaryId: string): Promise<Expense | null> {
   await ensureSchema();
   const sql = getSql();

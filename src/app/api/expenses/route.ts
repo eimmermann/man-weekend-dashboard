@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createExpense, listExpenses, toggleBeneficiaryPaid, deleteExpense, setExpenseBeneficiaries } from '@/lib/db';
+import { createExpense, listExpenses, toggleBeneficiaryPaid, deleteExpense, setExpenseBeneficiaries, updateExpense } from '@/lib/db';
 
 const CreateSchema = z.object({
   description: z.string().min(1).max(200),
@@ -18,6 +18,14 @@ const ToggleSchema = z.object({
 const UpdateBeneficiariesSchema = z.object({
   expenseId: z.string().min(1),
   beneficiaryIds: z.array(z.string().min(1)),
+});
+
+const UpdateFieldsSchema = z.object({
+  expenseId: z.string().min(1),
+  description: z.string().min(1).max(200).optional(),
+  amount: z.number().positive().optional(),
+  payerId: z.string().min(1).optional(),
+  date: z.string().date().optional(),
 });
 
 export async function GET() {
@@ -48,6 +56,14 @@ export async function PATCH(req: NextRequest) {
   const update = UpdateBeneficiariesSchema.safeParse(body);
   if (update.success) {
     const updated = await setExpenseBeneficiaries(update.data.expenseId, update.data.beneficiaryIds);
+    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(updated);
+  }
+  // Update expense fields
+  const updateFields = UpdateFieldsSchema.safeParse(body);
+  if (updateFields.success) {
+    const { expenseId, ...fields } = updateFields.data;
+    const updated = await updateExpense(expenseId, fields);
     if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(updated);
   }
