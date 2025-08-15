@@ -1,7 +1,8 @@
 "use client";
 
 import useSWR from 'swr';
-import type { Attendee } from '@/types';
+import { useEffect } from 'react';
+import type { Attendee, Expense } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -16,6 +17,8 @@ type Transfer = {
 
 export default function FinalBill() {
   const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  // Subscribe to expenses so we can revalidate settlement immediately when they change
+  const { data: expenses = [] } = useSWR<Expense[]>('/api/expenses', fetcher);
   const { data, mutate } = useSWR<{ transfers: Transfer[] }>(
     '/api/expenses/settlement',
     fetcher,
@@ -34,6 +37,12 @@ export default function FinalBill() {
   }
 
   const transfers = data?.transfers ?? [];
+
+  // Revalidate settlement whenever attendees or expenses change
+  useEffect(() => {
+    // fire-and-forget; SWR will dedupe
+    mutate();
+  }, [attendees, expenses, mutate]);
 
   return (
     <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">

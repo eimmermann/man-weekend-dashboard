@@ -1,6 +1,6 @@
 "use client";
 
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Attendee, Expense } from '@/types';
@@ -14,6 +14,7 @@ type SortDirection = 'asc' | 'desc';
 export default function Expenses() {
   const { data: attendees = [], isLoading: loadingAttendees } = useSWR<Attendee[]>('/api/attendees', fetcher);
   const { data: expenses = [], mutate: mutateExpenses, isLoading: loadingExpenses } = useSWR<Expense[]>('/api/expenses', fetcher);
+  const { mutate: globalMutate } = useSWRConfig();
 
   const [desc, setDesc] = useState('');
   const [amount, setAmount] = useState('');
@@ -87,6 +88,7 @@ export default function Expenses() {
         }),
       });
       await mutateExpenses();
+      await globalMutate('/api/expenses/settlement');
       setEditOpen(false);
       setEditingId(null);
     } finally {
@@ -154,6 +156,7 @@ export default function Expenses() {
       setPayerId(attendees[0]?.id || '');
       setBeneficiaryIds(attendees.map(a => a.id));
       mutateExpenses();
+      await globalMutate('/api/expenses/settlement');
       setOpen(false);
     } finally {
       setSubmitting(false);
@@ -495,7 +498,8 @@ export default function Expenses() {
                             type="button"
                             onClick={async () => {
                               await fetch(`/api/expenses?id=${encodeURIComponent(e.id)}`, { method: 'DELETE' });
-                              mutateExpenses();
+                              await mutateExpenses();
+                              await globalMutate('/api/expenses/settlement');
                             }}
                             className="rounded-md ring-1 ring-rose-400/40 text-rose-300 px-2 py-1 text-xs hover:bg-rose-500/10 transition-colors"
                             title="Delete expense"
