@@ -62,6 +62,18 @@ export function ensureSchema(): Promise<void> {
         );
       `;
 
+      // Final bill settlement tracking
+      await sql`
+        create table if not exists settlement_paid (
+          from_attendee_id text not null references attendees(id) on delete cascade,
+          to_attendee_id text not null references attendees(id) on delete cascade,
+          paid boolean not null default false,
+          amount numeric(12,2),
+          updated_at timestamptz not null default now(),
+          primary key (from_attendee_id, to_attendee_id)
+        );
+      `;
+
       // Stuff tracker tables
       await sql`
         create table if not exists stuff_items (

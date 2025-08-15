@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Attendees from '@/components/Attendees';
 import Expenses from '@/components/Expenses';
 import TotalSpend from '@/components/TotalSpend';
+import FinalBill from '@/components/FinalBill';
 import TripMap from '@/components/TripMap';
 import { Suspense } from 'react';
 import PokemonOfTheDay from '@/components/PokemonOfTheDay';
@@ -102,6 +103,7 @@ export default function HomeTabs() {
         <div className="space-y-6">
           <Expenses />
           <TotalSpend />
+          <FinalBill />
         </div>
       )}
     </div>

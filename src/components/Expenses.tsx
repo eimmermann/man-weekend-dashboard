@@ -438,7 +438,7 @@ export default function Expenses() {
                       onClick={() => handleSort('payer')}
                       className="flex items-center gap-1 hover:opacity-80 transition-opacity"
                     >
-                      Payer
+                      Owed
                       {sortField === 'payer' && (
                         <span className="text-xs">
                           {sortDirection === 'asc' ? '↑' : '↓'}
@@ -446,7 +446,7 @@ export default function Expenses() {
                       )}
                     </button>
                   </th>
-                  <th className="text-left py-3 px-2">Beneficiaries</th>
+                  <th className="text-left py-3 px-2">Reimbursed By</th>
                   <th className="text-left py-3 px-2">Actions</th>
                 </tr>
               </thead>
@@ -467,7 +467,9 @@ export default function Expenses() {
                          <div className="font-medium break-words max-w-48">{e.description}</div>
                        </td>
                        <td className="py-4 px-2">
-                         <div className="text-sm">{payer?.name || 'Unknown'}</div>
+                         <div className="inline-flex items-center gap-1 rounded-full bg-white/10 ring-1 ring-white/15 px-2 py-1 text-xs">
+                           <span>{payer?.name || 'Unknown'}</span>
+                         </div>
                        </td>
                       <td className="py-4 px-2">
                         <div className="flex flex-wrap gap-2">
@@ -507,6 +509,15 @@ export default function Expenses() {
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr className="border-t border-white/10">
+                  <td className="py-3 px-2 font-semibold">Total</td>
+                  <td className="py-3 px-2 font-semibold tabular-nums">
+                    ${sortedExpenses.reduce((sum, e) => sum + e.amount, 0).toFixed(2)}
+                  </td>
+                  <td colSpan={4}></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}

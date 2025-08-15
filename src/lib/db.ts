@@ -192,6 +192,47 @@ export async function deleteExpense(expenseId: string): Promise<boolean> {
   return (rows as unknown as { id: string }[]).length > 0;
 }
 
+// -----------------------
+// Settlement (final bill) paid tracking
+// -----------------------
+
+export async function listSettlementStatuses(): Promise<Array<{ fromAttendeeId: string; toAttendeeId: string; paid: boolean; amount: number | null; updatedAt: string }>> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select from_attendee_id, to_attendee_id, paid, (amount)::float8 as amount, updated_at
+    from settlement_paid
+  `;
+  return (rows as unknown as Array<{ from_attendee_id: string; to_attendee_id: string; paid: boolean; amount: number | null; updated_at: string }>).map(r => ({
+    fromAttendeeId: String(r.from_attendee_id),
+    toAttendeeId: String(r.to_attendee_id),
+    paid: Boolean(r.paid),
+    amount: r.amount != null ? Number(r.amount) : null,
+    updatedAt: new Date(String(r.updated_at)).toISOString(),
+  }));
+}
+
+export async function toggleSettlementStatus(fromAttendeeId: string, toAttendeeId: string, amount?: number): Promise<{ fromAttendeeId: string; toAttendeeId: string; paid: boolean; amount: number | null; updatedAt: string }> {
+  await ensureSchema();
+  const sql = getSql();
+  const amt = amount != null ? Math.max(0, Number(amount)) : null;
+  const rows = await sql`
+    insert into settlement_paid (from_attendee_id, to_attendee_id, paid, amount)
+    values (${fromAttendeeId}, ${toAttendeeId}, true, ${amt})
+    on conflict (from_attendee_id, to_attendee_id)
+    do update set paid = not settlement_paid.paid, amount = coalesce(${amt}, settlement_paid.amount), updated_at = now()
+    returning from_attendee_id, to_attendee_id, paid, (amount)::float8 as amount, updated_at
+  `;
+  const r = (rows as unknown as Array<{ from_attendee_id: string; to_attendee_id: string; paid: boolean; amount: number | null; updated_at: string }>)[0];
+  return {
+    fromAttendeeId: String(r.from_attendee_id),
+    toAttendeeId: String(r.to_attendee_id),
+    paid: Boolean(r.paid),
+    amount: r.amount != null ? Number(r.amount) : null,
+    updatedAt: new Date(String(r.updated_at)).toISOString(),
+  };
+}
+
 export async function deleteExpensesByDescriptionAndDate(description: string, date: string): Promise<number> {
   await ensureSchema();
   const sql = getSql();
