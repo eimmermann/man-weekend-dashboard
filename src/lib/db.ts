@@ -613,9 +613,22 @@ export async function deletePokerGame(gameId: string): Promise<boolean> {
 // Schedule activities
 // -----------------------
 
-type ActivityRow = { id: string; title: string; date: string; start_time: string; end_time: string; color: string | null; created_at: string };
+type ActivityRow = {
+  id: string;
+  title: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  color: string | null;
+  notes: string | null;
+  created_at: string;
+  attendee_ids?: unknown[];
+};
 
 function mapActivityRow(row: ActivityRow): ScheduleActivity {
+  const attendeeIds: string[] = Array.isArray(row.attendee_ids)
+    ? (row.attendee_ids as unknown[]).map(v => String(v))
+    : [];
   return {
     id: String(row.id),
     title: String(row.title),
@@ -623,6 +636,8 @@ function mapActivityRow(row: ActivityRow): ScheduleActivity {
     start: String(row.start_time),
     end: String(row.end_time),
     color: row.color ?? undefined,
+    notes: row.notes ?? undefined,
+    attendeeIds,
     createdAt: new Date(String(row.created_at)).toISOString(),
   };
 }
@@ -630,26 +645,77 @@ function mapActivityRow(row: ActivityRow): ScheduleActivity {
 export async function listActivities(): Promise<ScheduleActivity[]> {
   await ensureSchema();
   const sql = getSql();
-  const rows = await sql`select id, title, date, start_time, end_time, color, created_at from schedule_activities order by date asc, start_time asc`;
+  const rows = await sql`
+    select sa.id,
+           sa.title,
+           sa.date,
+           sa.start_time,
+           sa.end_time,
+           sa.color,
+           sa.notes,
+           sa.created_at,
+           coalesce(array_agg(saa.attendee_id) filter (where saa.attendee_id is not null), '{}'::text[]) as attendee_ids
+    from schedule_activities sa
+    left join schedule_activity_attendees saa on saa.activity_id = sa.id
+    group by sa.id
+    order by sa.date asc, sa.start_time asc
+  `;
   return (rows as unknown as ActivityRow[]).map(mapActivityRow);
 }
 
-export async function createActivity(input: { title: string; date: string; start: string; end: string; color?: string }): Promise<ScheduleActivity> {
+async function getActivityById(activityId: string): Promise<ScheduleActivity | null> {
+  const sql = getSql();
+  const rows = await sql`
+    select sa.id,
+           sa.title,
+           sa.date,
+           sa.start_time,
+           sa.end_time,
+           sa.color,
+           sa.notes,
+           sa.created_at,
+           coalesce(array_agg(saa.attendee_id) filter (where saa.attendee_id is not null), '{}'::text[]) as attendee_ids
+    from schedule_activities sa
+    left join schedule_activity_attendees saa on saa.activity_id = sa.id
+    where sa.id = ${activityId}
+    group by sa.id
+    limit 1
+  `;
+  const row = (rows as unknown as ActivityRow[])[0];
+  return row ? mapActivityRow(row) : null;
+}
+
+export async function createActivity(input: { title: string; date: string; start: string; end: string; color?: string; notes?: string; attendeeIds?: string[] }): Promise<ScheduleActivity> {
   await ensureSchema();
   const sql = getSql();
   const id = nanoid();
-  const rows = await sql`
-    insert into schedule_activities (id, title, date, start_time, end_time, color)
-    values (${id}, ${input.title}, ${input.date}, ${input.start}, ${input.end}, ${input.color || null})
-    returning id, title, date, start_time, end_time, color, created_at
+  const notes = (input.notes ?? '').trim() || null;
+  await sql`
+    insert into schedule_activities (id, title, date, start_time, end_time, color, notes)
+    values (${id}, ${input.title}, ${input.date}, ${input.start}, ${input.end}, ${input.color || null}, ${notes})
   `;
-  return mapActivityRow((rows as unknown as ActivityRow[])[0]);
+  // Determine attendee IDs: if none provided, default to all attendees
+  let attendeeIds: string[] = Array.isArray(input.attendeeIds) && input.attendeeIds.length
+    ? Array.from(new Set(input.attendeeIds.map(String)))
+    : [];
+  if (attendeeIds.length === 0) {
+    const all = await sql`select id from attendees`;
+    attendeeIds = (all as unknown as { id: string }[]).map(r => String(r.id));
+  }
+  // Insert attendees
+  for (const aId of attendeeIds) {
+    await sql`insert into schedule_activity_attendees (activity_id, attendee_id) values (${id}, ${aId}) on conflict do nothing`;
+  }
+  const created = await getActivityById(id);
+  if (!created) throw new Error('Failed to create activity');
+  return created;
 }
 
-export async function updateActivity(id: string, input: Partial<{ title: string; date: string; start: string; end: string; color?: string }>): Promise<ScheduleActivity | null> {
+export async function updateActivity(id: string, input: Partial<{ title: string; date: string; start: string; end: string; color?: string; notes?: string; attendeeIds?: string[] }>): Promise<ScheduleActivity | null> {
   await ensureSchema();
   const sql = getSql();
-  const existing = await sql`select id, title, date, start_time, end_time, color, created_at from schedule_activities where id = ${id} limit 1`;
+  // Read existing
+  const existing = await sql`select id, title, date, start_time, end_time, color, notes, created_at from schedule_activities where id = ${id} limit 1`;
   const row = (existing as unknown as ActivityRow[])[0];
   if (!row) return null;
   const next = {
@@ -658,14 +724,21 @@ export async function updateActivity(id: string, input: Partial<{ title: string;
     start: input.start ?? row.start_time,
     end: input.end ?? row.end_time,
     color: input.color ?? row.color ?? null,
-  };
-  const res = await sql`
+    notes: (input.notes !== undefined ? (input.notes?.trim() || null) : row.notes)
+  } as { title: string; date: string; start: string; end: string; color: string | null; notes: string | null };
+  await sql`
     update schedule_activities
-    set title = ${next.title}, date = ${next.date}, start_time = ${next.start}, end_time = ${next.end}, color = ${next.color}
+    set title = ${next.title}, date = ${next.date}, start_time = ${next.start}, end_time = ${next.end}, color = ${next.color}, notes = ${next.notes}
     where id = ${id}
-    returning id, title, date, start_time, end_time, color, created_at
   `;
-  return mapActivityRow((res as unknown as ActivityRow[])[0]);
+  if (input.attendeeIds) {
+    const unique = Array.from(new Set(input.attendeeIds.map(String)));
+    await sql`delete from schedule_activity_attendees where activity_id = ${id}`;
+    for (const aId of unique) {
+      await sql`insert into schedule_activity_attendees (activity_id, attendee_id) values (${id}, ${aId}) on conflict do nothing`;
+    }
+  }
+  return getActivityById(id);
 }
 
 export async function deleteActivity(id: string): Promise<boolean> {

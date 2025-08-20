@@ -34,6 +34,8 @@ export type ScheduleActivity = {
   start: string; // HH:mm
   end: string;   // HH:mm
   color?: string;
+  notes?: string;
+  attendeeIds: string[];
   createdAt: string;
 };
 

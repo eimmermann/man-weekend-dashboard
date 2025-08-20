@@ -153,7 +153,20 @@ export function ensureSchema(): Promise<void> {
           start_time text not null,
           end_time text not null,
           color text,
+          notes text,
           created_at timestamptz not null default now()
+        );
+      `;
+
+      // Ensure notes column exists for schedule_activities
+      await sql`alter table schedule_activities add column if not exists notes text`;
+
+      // Join table for activity attendees
+      await sql`
+        create table if not exists schedule_activity_attendees (
+          activity_id text not null references schedule_activities(id) on delete cascade,
+          attendee_id text not null references attendees(id) on delete restrict,
+          primary key (activity_id, attendee_id)
         );
       `;
     })();

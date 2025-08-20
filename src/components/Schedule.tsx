@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, isWithinInterval, parseISO, startOfDay } from "date-fns";
 import { TRIP_START_ISO, TRIP_END_ISO } from "@/lib/constants";
 import useSWR from 'swr';
+import type { Attendee } from '@/types';
 
 type Activity = {
   id: string;
@@ -12,6 +13,8 @@ type Activity = {
   start: string; // HH:mm
   end: string;   // HH:mm
   color?: string; // tailwind class suffix e.g. emerald, indigo
+  notes?: string;
+  attendeeIds?: string[];
 };
 
 const STORAGE_KEY = "mw-schedule-activities";
@@ -34,6 +37,8 @@ export default function Schedule() {
   const [end, setEnd] = useState("11:00");
   const [color, setColor] = useState("emerald");
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [notes, setNotes] = useState("");
+  const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [drag, setDrag] = useState<null | {
     id: string;
     mode: 'move' | 'resize';
@@ -49,6 +54,10 @@ export default function Schedule() {
   const fetcher = (url: string) => fetch(url).then(r => r.json());
   const { data: serverActivities, mutate } = useSWR<Activity[] | undefined>('/api/schedule', fetcher);
   useEffect(() => { if (Array.isArray(serverActivities)) setActivities(serverActivities); }, [serverActivities]);
+
+  // Attendees for selection
+  const { data: attendees } = useSWR<Attendee[] | undefined>('/api/attendees', fetcher);
+  const allAttendeeIds = useMemo(() => (attendees ?? []).map(a => a.id), [attendees]);
 
   const dayToActivities = useMemo(() => {
     const map: Record<string, Array<Activity & { lane: number }>> = {};
@@ -69,16 +78,20 @@ export default function Schedule() {
     e.preventDefault();
     if (!title.trim()) return;
     if (!isTripDate(date, tripStart, tripEnd)) return;
+    const payload: any = { title: title.trim(), date, start, end, color, notes: notes.trim() || undefined };
+    if (attendeeIds && attendeeIds.length > 0) payload.attendeeIds = attendeeIds;
     if (editId) {
-      await fetch(`/api/schedule/${encodeURIComponent(editId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title.trim(), date, start, end, color }) });
+      await fetch(`/api/schedule/${encodeURIComponent(editId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       mutate();
     } else {
-      await fetch('/api/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title.trim(), date, start, end, color }) });
+      await fetch('/api/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       mutate();
     }
     setShowModal(false);
     setTitle("");
     setEditId(null);
+    setNotes("");
+    setAttendeeIds([]);
   }
 
   async function removeActivity(id: string) {
@@ -104,6 +117,8 @@ export default function Schedule() {
     setEnd(endHHMM);
     setTitle("");
     setEditId(null);
+    setNotes("");
+    setAttendeeIds(allAttendeeIds);
     setShowModal(true);
   }
 
@@ -221,7 +236,7 @@ export default function Schedule() {
     <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-4 md:p-5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-lg font-semibold">Schedule</div>
-        <button onClick={() => { setEditId(null); setShowModal(true); }} className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5 text-sm">Add Activity</button>
+        <button onClick={() => { setEditId(null); setShowModal(true); setNotes(""); setAttendeeIds(allAttendeeIds); }} className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-3 py-1.5 text-sm">Add Activity</button>
       </div>
 
       <div className="overflow-x-auto no-scrollbar">
@@ -278,6 +293,7 @@ export default function Schedule() {
                         const isDraggingThis = drag && drag.id === a.id && drag.dateKey === key;
                         const previewTop = isDraggingThis ? (drag.startMin / 60) * HOUR_PX : top;
                         const previewHeight = isDraggingThis ? Math.max(24, ((drag.endMin - drag.startMin) / 60) * HOUR_PX) : height;
+                        const numAttendees = (a.attendeeIds && a.attendeeIds.length) ? a.attendeeIds.length : 0;
                         return (
                           <div
                             key={a.id}
@@ -291,7 +307,13 @@ export default function Schedule() {
                             {!compact && previewHeight >= 38 && (
                               <div className="px-2 pb-1 text-[10px] opacity-80">{hhmmToAmPm(a.start)} – {hhmmToAmPm(a.end)}</div>
                             )}
+                            {!compact && previewHeight >= 60 && (a as any).notes && (
+                              <div className="px-2 pb-1 text-[10px] opacity-90 truncate">{(a as any).notes}</div>
+                            )}
                             <button onClick={(ev) => { ev.stopPropagation(); removeActivity(a.id); }} className="absolute top-0.5 right-1 text-[10px] opacity-80 hover:opacity-100">×</button>
+                            {numAttendees > 0 && (
+                              <div className="absolute bottom-0.5 right-1 text-[10px] opacity-90 bg-black/25 rounded px-1 leading-4">{numAttendees}</div>
+                            )}
                             {/* resize handle */}
                             <div
                               className="absolute left-0 right-0 bottom-0 h-2 cursor-ns-resize"
@@ -332,6 +354,10 @@ export default function Schedule() {
                 <label className="block text-sm mb-1">Title</label>
                 <input value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" placeholder="Activity title" />
               </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm mb-1">Notes</label>
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2" rows={3} placeholder="Optional notes" />
+              </div>
               <div>
                 <label className="block text-sm mb-1">Date</label>
                 <input type="date" value={date} onChange={e => setDate(e.target.value)} min={format(tripStart, "yyyy-MM-dd")} max={format(tripEnd, "yyyy-MM-dd")} className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2 text-slate-100" style={{ colorScheme: 'dark' }} />
@@ -352,6 +378,30 @@ export default function Schedule() {
                   {(["emerald","indigo","cyan","violet","rose","amber"] as const).map(c => (
                     <button type="button" key={c} onClick={() => setColor(c)} className={`h-8 w-8 rounded-full ring-2 ${color === c ? "ring-white" : "ring-white/20"} ${swatchBg(c)}`} aria-label={c} />
                   ))}
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm">Attendees</label>
+                  <div className="text-[11px] opacity-70">{attendeeIds.length}/{allAttendeeIds.length} selected</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setAttendeeIds(allAttendeeIds)} className="text-xs rounded-md px-2 py-1 ring-1 ring-white/10 bg-white/5 hover:bg-white/10">Select all</button>
+                  <button type="button" onClick={() => setAttendeeIds([])} className="text-xs rounded-md px-2 py-1 ring-1 ring-white/10 bg-white/5 hover:bg-white/10">Clear</button>
+                </div>
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-auto pr-1">
+                  {(attendees ?? []).map(a => {
+                    const checked = attendeeIds.includes(a.id);
+                    return (
+                      <label key={a.id} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={checked} onChange={e => {
+                          if (e.target.checked) setAttendeeIds(ids => Array.from(new Set([...ids, a.id])));
+                          else setAttendeeIds(ids => ids.filter(id => id !== a.id));
+                        }} />
+                        <span className="opacity-90">{a.name}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
               <div className="sm:col-span-2 flex items-center justify-end gap-2 mt-1">
@@ -390,6 +440,18 @@ export default function Schedule() {
                 <div className="text-xs opacity-70">Color</div>
                 <div className={`h-4 w-4 rounded-full ${swatchBg(selectedActivity.color || 'emerald')}`} />
               </div>
+              {(selectedActivity as any).notes && (
+                <div>
+                  <div className="text-xs opacity-70">Notes</div>
+                  <div className="text-sm whitespace-pre-wrap opacity-90">{(selectedActivity as any).notes}</div>
+                </div>
+              )}
+              <div>
+                <div className="text-xs opacity-70">Attendees {(selectedActivity as any).attendeeIds ? `(${(selectedActivity as any).attendeeIds.length})` : ''}</div>
+                <div className="text-sm opacity-90">
+                  {(((selectedActivity as any).attendeeIds as string[]) || []).map(id => (attendees || []).find(a => a.id === id)?.name || 'Unknown').join(', ')}
+                </div>
+              </div>
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
@@ -400,6 +462,8 @@ export default function Schedule() {
                   setStart(selectedActivity.start);
                   setEnd(selectedActivity.end);
                   setColor(selectedActivity.color || 'emerald');
+                  setNotes((selectedActivity as any).notes || '');
+                  setAttendeeIds(((selectedActivity as any).attendeeIds as string[]) || []);
                   setSelectedActivity(null);
                   setShowModal(true);
                 }}

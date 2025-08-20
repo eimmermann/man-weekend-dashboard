@@ -13,10 +13,12 @@ export async function POST(req: Request) {
   const start = String(body.start || '');
   const end = String(body.end || '');
   const color = typeof body.color === 'string' ? body.color : undefined;
+  const notes = typeof body.notes === 'string' ? body.notes : undefined;
+  const attendeeIds = Array.isArray(body.attendeeIds) ? body.attendeeIds.map((v: unknown) => String(v)) : undefined;
   if (!title || !date || !start || !end) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
-  const created = await createActivity({ title, date, start, end, color });
+  const created = await createActivity({ title, date, start, end, color, notes, attendeeIds });
   return NextResponse.json(created);
 }
 
