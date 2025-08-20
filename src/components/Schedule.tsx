@@ -297,12 +297,17 @@ export default function Schedule() {
                         return (
                           <div
                             key={a.id}
-                            className={`activity-card absolute rounded-lg ${colorBg} ${colorRing} text-white shadow flex flex-col z-10 cursor-pointer overflow-hidden`}
+                            className={`activity-card absolute rounded-lg ${colorBg} ${colorRing} text-white shadow flex flex-col z-10 cursor-default overflow-hidden`}
                             style={{ top: previewTop, left: `${leftPct}%`, width: `${widthPct}%`, height: previewHeight, opacity: isDraggingThis ? 0.9 : 1 }}
                             title={`${a.title} (${hhmmToAmPm(a.start)}–${hhmmToAmPm(a.end)})`}
-                            onMouseDown={(ev) => { if (ev.button !== 0) return; if ((ev as any).detail > 1) return; beginDragMove(ev, a, key); }}
                             onDoubleClick={() => setSelectedActivity(a)}
                           >
+                            {/* drag handle for moving the event */}
+                            <div
+                              className="absolute left-0 top-0 bottom-0 w-2 cursor-grab bg-black/15 hover:bg-black/25"
+                              title="Drag to move"
+                              onMouseDown={(ev) => { if (ev.button !== 0) return; beginDragMove(ev, a, key); }}
+                            />
                             <div className={`${compact ? 'px-2 pt-0.5 pb-0 text-[11px]' : 'px-2 pt-1 text-sm'} font-semibold leading-tight truncate`}>{a.title}</div>
                             {!compact && previewHeight >= 38 && (
                               <div className="px-2 pb-1 text-[10px] opacity-80">{hhmmToAmPm(a.start)} – {hhmmToAmPm(a.end)}</div>
@@ -343,8 +348,8 @@ export default function Schedule() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowModal(false)} />
-          <div className="modal-dark relative z-10 w-[min(560px,92vw)] rounded-xl bg-white/10 backdrop-blur-2xl ring-1 ring-white/15 p-5 shadow-2xl">
+          <div className="absolute inset-0 bg-black/80" onClick={() => setShowModal(false)} />
+          <div className="modal-dark relative z-10 w-[min(560px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-md ring-1 ring-white/20 p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">{editId ? 'Edit Activity' : 'Add Activity'}</div>
               <button onClick={() => setShowModal(false)} className="opacity-70 hover:opacity-100">×</button>
@@ -415,8 +420,8 @@ export default function Schedule() {
 
       {selectedActivity && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedActivity(null)} />
-          <div className="relative z-10 w-[min(520px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setSelectedActivity(null)} />
+          <div className="relative z-10 w-[min(520px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-md ring-1 ring-white/20 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Activity Details</div>
               <button onClick={() => setSelectedActivity(null)} className="opacity-70 hover:opacity-100">×</button>
