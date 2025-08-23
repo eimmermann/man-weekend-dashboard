@@ -272,8 +272,6 @@ export default function Schedule() {
               {days.map((d) => {
                 const key = format(d, "yyyy-MM-dd");
                 const items = dayToActivities[key] || [];
-                const lanes = Math.max(1, Math.max(0, ...items.map(i => i.lane)) + 1);
-                const laneWidthPct = 100 / lanes;
                 return (
                   <div key={key} className="flex-1 min-w-[180px]">
                     <div ref={el => { colRefs.current[key] = el; }} className="relative rounded-xl ring-1 ring-white/10 bg-white/5" style={{ height: columnHeight }}>
@@ -285,8 +283,16 @@ export default function Schedule() {
                       {items.map((a) => {
                         const top = minutesFromDayStart(a.start) / 60 * HOUR_PX;
                         const height = Math.max(24, Math.max(0, (minutesFromDayStart(a.end) - minutesFromDayStart(a.start))) / 60 * HOUR_PX);
-                        const leftPct = a.lane * laneWidthPct;
-                        const widthPct = laneWidthPct - 2; // spacing between lanes
+                        const startMin = minutesFromDayStart(a.start);
+                        const endMin = minutesFromDayStart(a.end);
+                        const concurrentCount = Math.max(1, items.filter(b => {
+                          const bs = minutesFromDayStart(b.start);
+                          const be = minutesFromDayStart(b.end);
+                          return startMin < be && bs < endMin; // overlap
+                        }).length);
+                        const laneWidthPctForGroup = 100 / concurrentCount;
+                        const leftPct = a.lane * laneWidthPctForGroup;
+                        const widthPct = concurrentCount === 1 ? 100 : (laneWidthPctForGroup - 2); // full width when no overlap
                         const colorBg = colorToBg(a.color || "emerald");
                         const colorRing = colorToRing(a.color || "emerald");
                         const compact = height < 34;
