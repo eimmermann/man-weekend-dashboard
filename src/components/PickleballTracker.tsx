@@ -259,14 +259,19 @@ export default function PickleballTracker() {
     e.preventDefault();
     if (!team1Player1Id || !team2Player1Id) return;
     
+    // Always use current date and time when submitting
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
     setSaving(true);
     try {
       const response = await fetch('/api/pickleball', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          date,
-          time: time || undefined,
+          date: currentDate,
+          time: currentTime,
           team1Player1Id,
           team1Player2Id: team1Player2Id || undefined,
           team2Player1Id,
@@ -474,43 +479,13 @@ export default function PickleballTracker() {
                   />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-white/90">Date</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-white/90">Time (optional)</label>
-                  <input
-                    type="time"
-                    value={time}
-                    onChange={e => setTime(e.target.value)}
-                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-              </div>
               
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="order-2 sm:order-1 rounded-xl ring-1 ring-white/20 bg-white/10 hover:bg-white/20 px-6 py-3 text-base font-medium text-white/90 transition-colors"
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
+              <div className="flex justify-center pt-2">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="order-1 sm:order-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-medium px-6 py-3 text-base transition-colors disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-medium px-8 py-3 text-base transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Game'}
                 </button>
