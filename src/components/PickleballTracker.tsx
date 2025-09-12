@@ -458,25 +458,65 @@ export default function PickleballTracker() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2 text-white/90">Team 1 Score</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={team1Score}
-                    onChange={e => setTeam1Score(parseInt(e.target.value) || 0)}
-                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-lg font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    required
-                  />
+                  <div className="space-y-3">
+                    <input
+                      type="number"
+                      min="0"
+                      value={team1Score}
+                      onChange={e => setTeam1Score(parseInt(e.target.value) || 0)}
+                      onFocus={e => e.target.select()}
+                      onClick={e => e.target.select()}
+                      className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-xl font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      required
+                    />
+                    <div className="flex gap-1 justify-center">
+                      {[11, 15, 21].map(score => (
+                        <button
+                          key={score}
+                          type="button"
+                          onClick={() => setTeam1Score(score)}
+                          className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                            team1Score === score 
+                              ? 'bg-indigo-500 text-white' 
+                              : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                          }`}
+                        >
+                          {score}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-white/90">Team 2 Score</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={team2Score}
-                    onChange={e => setTeam2Score(parseInt(e.target.value) || 0)}
-                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-lg font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    required
-                  />
+                  <div className="space-y-3">
+                    <input
+                      type="number"
+                      min="0"
+                      value={team2Score}
+                      onChange={e => setTeam2Score(parseInt(e.target.value) || 0)}
+                      onFocus={e => e.target.select()}
+                      onClick={e => e.target.select()}
+                      className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-xl font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      required
+                    />
+                    <div className="flex gap-1 justify-center">
+                      {[11, 15, 21].map(score => (
+                        <button
+                          key={score}
+                          type="button"
+                          onClick={() => setTeam2Score(score)}
+                          className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                            team2Score === score 
+                              ? 'bg-indigo-500 text-white' 
+                              : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                          }`}
+                        >
+                          {score}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
               
