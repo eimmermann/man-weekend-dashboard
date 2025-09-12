@@ -464,8 +464,8 @@ export default function PickleballTracker() {
                       min="0"
                       value={team1Score}
                       onChange={e => setTeam1Score(parseInt(e.target.value) || 0)}
-                      onFocus={e => e.target.select()}
-                      onClick={e => e.target.select()}
+                      onFocus={e => (e.target as HTMLInputElement).select()}
+                      onClick={e => (e.target as HTMLInputElement).select()}
                       className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-xl font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                       required
                     />
@@ -495,8 +495,8 @@ export default function PickleballTracker() {
                       min="0"
                       value={team2Score}
                       onChange={e => setTeam2Score(parseInt(e.target.value) || 0)}
-                      onFocus={e => e.target.select()}
-                      onClick={e => e.target.select()}
+                      onFocus={e => (e.target as HTMLInputElement).select()}
+                      onClick={e => (e.target as HTMLInputElement).select()}
                       className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-xl font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                       required
                     />
