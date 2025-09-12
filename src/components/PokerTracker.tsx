@@ -333,7 +333,7 @@ export default function PokerTracker() {
 
           {isModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setIsModalOpen(false)} />
+              <div className="absolute inset-0 bg-black/70" onClick={() => setIsModalOpen(false)} />
               <div className="relative z-10 w-[min(640px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-lg font-semibold">New Poker Game</div>
@@ -381,7 +381,7 @@ export default function PokerTracker() {
 
       {(rebuyModal || cashOutModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => { setRebuyModal(null); setCashOutModal(null); }} />
+          <div className="absolute inset-0 bg-black/70" onClick={() => { setRebuyModal(null); setCashOutModal(null); }} />
           <div className="relative z-10 w-[min(420px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">{rebuyModal ? 'Rebuy' : 'Cash Out'}</div>
@@ -410,7 +410,7 @@ export default function PokerTracker() {
 
       {deleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteModal(null)} />
+          <div className="absolute inset-0 bg-black/70" onClick={() => setDeleteModal(null)} />
           <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Delete Game</div>
@@ -429,7 +429,7 @@ export default function PokerTracker() {
 
       {finishBlockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setFinishBlockModal(null)} />
+          <div className="absolute inset-0 bg-black/70" onClick={() => setFinishBlockModal(null)} />
           <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Cannot Finish Game</div>

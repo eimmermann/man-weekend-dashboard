@@ -183,7 +183,7 @@ export default function Expenses() {
       {open && hasMounted && createPortal(
         (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!submitting && setOpen(false))} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => (!submitting && setOpen(false))} />
             <div role="dialog" aria-modal="true" className="relative z-[1001] w-full max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
               <h4 className="text-base font-semibold">Add expense</h4>
               <form onSubmit={addExpense} className="mt-4 grid grid-cols-1 gap-3">
@@ -293,7 +293,7 @@ export default function Expenses() {
       {editOpen && hasMounted && createPortal(
         (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!editSubmitting && setEditOpen(false))} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => (!editSubmitting && setEditOpen(false))} />
             <div role="dialog" aria-modal="true" className="relative z-[1001] w-full max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
               <h4 className="text-base font-semibold">Edit expense</h4>
               <form onSubmit={saveEdit} className="mt-4 grid grid-cols-1 gap-3">

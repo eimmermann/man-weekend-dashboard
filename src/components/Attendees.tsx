@@ -250,7 +250,7 @@ export default function Attendees() {
       </div>
       {addOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!submitting && setAddOpen(false))} />
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => (!submitting && setAddOpen(false))} />
           <div className="relative z-[1001] w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
             <h4 className="text-base font-semibold">Join Man Weekend</h4>
             <form onSubmit={onSubmit} className="mt-4 grid grid-cols-1 gap-3">
@@ -326,7 +326,7 @@ export default function Attendees() {
       )}
       {editOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => (!submitting && setEditOpen(null))} />
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => (!submitting && setEditOpen(null))} />
           <div className="relative z-[1001] w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5">
             <h4 className="text-base font-semibold">Edit attendee</h4>
             <EditForm attendee={editOpen} onClose={() => setEditOpen(null)} onSaved={() => { mutate(); setEditOpen(null); }} />
@@ -336,7 +336,7 @@ export default function Attendees() {
       {confirm && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => (deletingId ? null : setConfirm(null))}
           />
           <div

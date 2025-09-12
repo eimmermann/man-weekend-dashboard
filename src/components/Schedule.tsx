@@ -354,7 +354,7 @@ export default function Schedule() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/80" onClick={() => setShowModal(false)} />
+          <div className="absolute inset-0 bg-black/70" onClick={() => setShowModal(false)} />
           <div className="modal-dark relative z-10 w-[min(560px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-md ring-1 ring-white/20 p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">{editId ? 'Edit Activity' : 'Add Activity'}</div>

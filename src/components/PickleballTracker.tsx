@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import useSWR from 'swr';
 import type { PickleballGame, Attendee } from '@/types';
 
@@ -40,15 +41,14 @@ export default function PickleballTracker() {
 
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [location, setLocation] = useState('');
   const [team1Player1Id, setTeam1Player1Id] = useState('');
   const [team1Player2Id, setTeam1Player2Id] = useState('');
   const [team2Player1Id, setTeam2Player1Id] = useState('');
   const [team2Player2Id, setTeam2Player2Id] = useState('');
   const [team1Score, setTeam1Score] = useState(0);
   const [team2Score, setTeam2Score] = useState(0);
-  const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   // Calculate player statistics
   const playerStats = useMemo((): PlayerStats[] => {
@@ -219,17 +219,41 @@ export default function PickleballTracker() {
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     setDate(today);
+    setHasMounted(true);
   }, []);
 
-  // Default time to current time when opening the add game modal
+  // Default time to current time and teams from previous game when opening the add game modal
   useEffect(() => {
     if (showAddForm) {
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       setTime(`${hh}:${mm}`);
+      
+      // Default teams from the most recent game
+      if (games.length > 0) {
+        const lastGame = games[0]; // Assuming games are sorted by most recent first
+        setTeam1Player1Id(lastGame.team1Player1Id);
+        setTeam1Player2Id(lastGame.team1Player2Id || '');
+        setTeam2Player1Id(lastGame.team2Player1Id);
+        setTeam2Player2Id(lastGame.team2Player2Id || '');
+      }
+      
+      // Scroll to top and prevent body scrolling when modal opens
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore body scrolling when modal closes
+      document.body.style.overflow = 'unset';
     }
-  }, [showAddForm]);
+  }, [showAddForm, games]);
+
+  // Cleanup effect to restore body scroll if component unmounts with modal open
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -243,14 +267,12 @@ export default function PickleballTracker() {
         body: JSON.stringify({
           date,
           time: time || undefined,
-          location: location || undefined,
           team1Player1Id,
           team1Player2Id: team1Player2Id || undefined,
           team2Player1Id,
           team2Player2Id: team2Player2Id || undefined,
           team1Score,
           team2Score,
-          notes: notes || undefined,
         }),
       });
       
@@ -267,14 +289,12 @@ export default function PickleballTracker() {
   function resetForm() {
     setDate(new Date().toISOString().split('T')[0]);
     setTime('');
-    setLocation('');
     setTeam1Player1Id('');
     setTeam1Player2Id('');
     setTeam2Player1Id('');
     setTeam2Player2Id('');
     setTeam1Score(0);
     setTeam2Score(0);
-    setNotes('');
   }
 
   function handleDeleteClick(game: PickleballGame) {
@@ -350,123 +370,139 @@ export default function PickleballTracker() {
         </div>
       </div>
 
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white/5 backdrop-blur-xl ring-1 ring-white/10 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h4 className="text-lg font-semibold mb-4">Add Pickleball Game</h4>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                  required
-                />
-                <input
-                  type="time"
-                  value={time}
-                  onChange={e => setTime(e.target.value)}
-                className="rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                />
-              </div>
-              
-              <input
-                type="text"
-                placeholder="Location (optional)"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-              />
-
-              <div className="space-y-3">
-                <h5 className="font-medium">Team 1</h5>
-                <select
-                  value={team1Player1Id}
-                  onChange={e => setTeam1Player1Id(e.target.value)}
-                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                  required
-                >
-                  <option value="">Select Player 1</option>
-                  {attendees.map(attendee => (
-                    <option key={attendee.id} value={attendee.id}>{attendee.name}</option>
-                  ))}
-                </select>
-                <select
-                  value={team1Player2Id}
-                  onChange={e => setTeam1Player2Id(e.target.value)}
-                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                >
-                  <option value="">Select Player 2 (optional)</option>
-                  {attendees.map(attendee => (
-                    <option key={attendee.id} value={attendee.id}>{attendee.name}</option>
-                  ))}
-                </select>
+      {showAddForm && hasMounted && createPortal(
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4 min-h-screen" onClick={() => setShowAddForm(false)}>
+          <div className="bg-zinc-900/95 backdrop-blur-xl ring-1 ring-white/20 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl my-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="text-xl font-semibold text-white">Add Pickleball Game</h4>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="text-white/60 hover:text-white/90 text-2xl leading-none p-1 transition-colors"
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-4">
+                <h5 className="font-medium text-white/90 text-base">Team 1</h5>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-white/80">Player 1</label>
+                    <select
+                      value={team1Player1Id}
+                      onChange={e => setTeam1Player1Id(e.target.value)}
+                      className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      required
+                    >
+                      <option value="" className="bg-zinc-800 text-white">Select Player 1</option>
+                      {attendees.map(attendee => (
+                        <option key={attendee.id} value={attendee.id} className="bg-zinc-800 text-white">{attendee.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-white/80">Player 2 (optional)</label>
+                    <select
+                      value={team1Player2Id}
+                      onChange={e => setTeam1Player2Id(e.target.value)}
+                      className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="" className="bg-zinc-800 text-white">Select Player 2 (optional)</option>
+                      {attendees.map(attendee => (
+                        <option key={attendee.id} value={attendee.id} className="bg-zinc-800 text-white">{attendee.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <h5 className="font-medium">Team 2</h5>
-                <select
-                  value={team2Player1Id}
-                  onChange={e => setTeam2Player1Id(e.target.value)}
-                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                  required
-                >
-                  <option value="">Select Player 1</option>
-                  {attendees.map(attendee => (
-                    <option key={attendee.id} value={attendee.id}>{attendee.name}</option>
-                  ))}
-                </select>
-                <select
-                  value={team2Player2Id}
-                  onChange={e => setTeam2Player2Id(e.target.value)}
-                  className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                >
-                  <option value="">Select Player 2 (optional)</option>
-                  {attendees.map(attendee => (
-                    <option key={attendee.id} value={attendee.id}>{attendee.name}</option>
-                  ))}
-                </select>
+              <div className="space-y-4">
+                <h5 className="font-medium text-white/90 text-base">Team 2</h5>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-white/80">Player 1</label>
+                    <select
+                      value={team2Player1Id}
+                      onChange={e => setTeam2Player1Id(e.target.value)}
+                      className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      required
+                    >
+                      <option value="" className="bg-zinc-800 text-white">Select Player 1</option>
+                      {attendees.map(attendee => (
+                        <option key={attendee.id} value={attendee.id} className="bg-zinc-800 text-white">{attendee.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-white/80">Player 2 (optional)</label>
+                    <select
+                      value={team2Player2Id}
+                      onChange={e => setTeam2Player2Id(e.target.value)}
+                      className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                      <option value="" className="bg-zinc-800 text-white">Select Player 2 (optional)</option>
+                      {attendees.map(attendee => (
+                        <option key={attendee.id} value={attendee.id} className="bg-zinc-800 text-white">{attendee.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Team 1 Score</label>
+                  <label className="block text-sm font-medium mb-2 text-white/90">Team 1 Score</label>
                   <input
                     type="number"
                     min="0"
                     value={team1Score}
                     onChange={e => setTeam1Score(parseInt(e.target.value) || 0)}
-                    className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
+                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-lg font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Team 2 Score</label>
+                  <label className="block text-sm font-medium mb-2 text-white/90">Team 2 Score</label>
                   <input
                     type="number"
                     min="0"
                     value={team2Score}
                     onChange={e => setTeam2Score(parseInt(e.target.value) || 0)}
-                    className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
+                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white text-center text-lg font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     required
                   />
                 </div>
               </div>
 
-              <textarea
-                placeholder="Notes (optional)"
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2"
-                rows={3}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-white/90">Date</label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-white/90">Time (optional)</label>
+                  <input
+                    type="time"
+                    value={time}
+                    onChange={e => setTime(e.target.value)}
+                    className="w-full rounded-lg ring-1 ring-white/20 bg-white/10 px-4 py-3 text-white placeholder-white/60 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              
 
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="rounded-xl ring-1 ring-white/10 bg-white/5 hover:bg-white/10 px-3 py-1.5 text-sm"
+                  className="order-2 sm:order-1 rounded-xl ring-1 ring-white/20 bg-white/10 hover:bg-white/20 px-6 py-3 text-base font-medium text-white/90 transition-colors"
                   disabled={saving}
                 >
                   Cancel
@@ -474,18 +510,19 @@ export default function PickleballTracker() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-3 py-1.5 text-sm"
+                  className="order-1 sm:order-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-medium px-6 py-3 text-base transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save Game'}
                 </button>
               </div>
             </form>
           </div>
-                 </div>
-       )}
+        </div>,
+        document.body
+      )}
 
        {showDeleteModal && gameToDelete && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
            <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 max-w-md w-full mx-4">
              <h4 className="text-lg font-semibold mb-4">Delete Game</h4>
              <p className="text-sm mb-6">
