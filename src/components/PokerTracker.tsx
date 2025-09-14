@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import useSWR from 'swr';
 import type { Attendee } from '@/types';
 
@@ -37,9 +38,14 @@ export default function PokerTracker() {
   const [amount, setAmount] = useState<string>('');
   const [deleteModal, setDeleteModal] = useState<null | { gameId: string }>(null);
   const [finishBlockModal, setFinishBlockModal] = useState<null | { amount: number }>(null);
+  const [hasMounted, setHasMounted] = useState(false);
 
   const attendeeName = (id: string) => attendees.find(a => a.id === id)?.name || 'Unknown';
   const formatCurrency = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n) || 0);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   // const addRow = () => setRows(prev => [...prev, { attendeeId: attendees[0]?.id || '', buyIn: 20 }]);
   const removeRow = (idx: number) => setRows(prev => prev.filter((_, i) => i !== idx));
@@ -331,10 +337,10 @@ export default function PokerTracker() {
             ))}
           </div>
 
-          {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {isModalOpen && hasMounted && createPortal(
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center">
               <div className="absolute inset-0 bg-black/70" onClick={() => setIsModalOpen(false)} />
-              <div className="relative z-10 w-[min(640px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
+              <div className="relative z-10 w-[min(640px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-xl ring-1 ring-white/20 p-5 shadow-2xl">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-lg font-semibold">New Poker Game</div>
                   <button onClick={() => setIsModalOpen(false)} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -374,15 +380,16 @@ export default function PokerTracker() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       )}
 
-      {(rebuyModal || cashOutModal) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {(rebuyModal || cashOutModal) && hasMounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/70" onClick={() => { setRebuyModal(null); setCashOutModal(null); }} />
-          <div className="relative z-10 w-[min(420px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
+          <div className="relative z-10 w-[min(420px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-xl ring-1 ring-white/20 p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">{rebuyModal ? 'Rebuy' : 'Cash Out'}</div>
               <button onClick={() => { setRebuyModal(null); setCashOutModal(null); }} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -405,13 +412,14 @@ export default function PokerTracker() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {deleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {deleteModal && hasMounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/70" onClick={() => setDeleteModal(null)} />
-          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
+          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-xl ring-1 ring-white/20 p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Delete Game</div>
               <button onClick={() => setDeleteModal(null)} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -424,13 +432,14 @@ export default function PokerTracker() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {finishBlockModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {finishBlockModal && hasMounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/70" onClick={() => setFinishBlockModal(null)} />
-          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-5 shadow-xl">
+          <div className="relative z-10 w-[min(440px,92vw)] rounded-xl bg-zinc-900/95 backdrop-blur-xl ring-1 ring-white/20 p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="text-lg font-semibold">Cannot Finish Game</div>
               <button onClick={() => setFinishBlockModal(null)} className="text-zinc-500 hover:text-zinc-700">×</button>
@@ -443,7 +452,8 @@ export default function PokerTracker() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {view === 'summary' && (
