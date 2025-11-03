@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.errors }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
   }
   
   try {
@@ -80,7 +80,7 @@ export async function PUT(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const parsed = UpdateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.errors }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
   }
   
   try {
