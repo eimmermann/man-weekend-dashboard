@@ -39,8 +39,6 @@ export default function PickleballTracker() {
   console.log('PickleballTracker - games:', games);
   console.log('PickleballTracker - error:', error);
 
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
   const [team1Player1Id, setTeam1Player1Id] = useState('');
   const [team1Player2Id, setTeam1Player2Id] = useState('');
   const [team2Player1Id, setTeam2Player1Id] = useState('');
@@ -216,20 +214,12 @@ export default function PickleballTracker() {
   }
 
   useEffect(() => {
-    // Set today's date as default
-    const today = new Date().toISOString().split('T')[0];
-    setDate(today);
     setHasMounted(true);
   }, []);
 
-  // Default time to current time and teams from previous game when opening the add game modal
+  // Default teams from previous game when opening the add game modal
   useEffect(() => {
     if (showAddForm) {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      setTime(`${hh}:${mm}`);
-      
       // Default teams from the most recent game
       if (games.length > 0) {
         const lastGame = games[0]; // Assuming games are sorted by most recent first
@@ -292,8 +282,6 @@ export default function PickleballTracker() {
   }
 
   function resetForm() {
-    setDate(new Date().toISOString().split('T')[0]);
-    setTime('');
     setTeam1Player1Id('');
     setTeam1Player2Id('');
     setTeam2Player1Id('');

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateActivity, deleteActivity } from '@/lib/db';
 
-export async function PATCH(_req: Request, context: any) {
+export async function PATCH(_req: Request, context: { params: { id: string } }) {
   const id = String(context?.params?.id || '');
   const body = await _req.json().catch(() => ({}));
   const updated = await updateActivity(id, body);
@@ -9,7 +9,7 @@ export async function PATCH(_req: Request, context: any) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_req: Request, context: any) {
+export async function DELETE(_req: Request, context: { params: { id: string } }) {
   const id = String(context?.params?.id || '');
   const ok = await deleteActivity(id);
   return NextResponse.json({ ok });

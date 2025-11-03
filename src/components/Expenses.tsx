@@ -101,8 +101,8 @@ export default function Expenses() {
     if (!expenses.length) return [];
     
     return [...expenses].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
       
       switch (sortField) {
         case 'date':
