@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import type { Attendee, Expense, PickleballGame, ScheduleActivity, WeekendBlocker, CreateWeekendBlockerPayload, UpdateWeekendBlockerPayload, WeekendEvent, BlockedWeekend, CreateWeekendEventPayload, UpdateWeekendEventPayload } from '@/types';
+import type { Attendee, Expense, PickleballGame, ScheduleActivity, WeekendBlocker, WeekendEvent, BlockedWeekend, CreateWeekendEventPayload, UpdateWeekendEventPayload } from '@/types';
 import { ensureSchema, getSql } from '@/lib/neon';
 import { calculateWeekendBlocks, calculateRecurringWeekendBlocks } from './weekend-utils';
 
@@ -1207,7 +1207,17 @@ export async function listWeekendBlockers(year?: number): Promise<WeekendBlocker
   return blockers;
 }
 
-export async function createWeekendBlocker(input: CreateWeekendBlockerPayload): Promise<WeekendBlocker> {
+// Legacy types for backward compatibility with old blocker endpoints
+type LegacyCreateWeekendBlockerPayload = {
+  attendeeId: string;
+  eventName: string;
+  eventDate: string;
+  weekendStartDate: string;
+  isRecurring: boolean;
+};
+type LegacyUpdateWeekendBlockerPayload = Partial<LegacyCreateWeekendBlockerPayload>;
+
+export async function createWeekendBlocker(input: LegacyCreateWeekendBlockerPayload): Promise<WeekendBlocker> {
   await ensureSchema();
   const sql = getSql();
   const id = nanoid();
@@ -1232,7 +1242,7 @@ export async function createWeekendBlocker(input: CreateWeekendBlockerPayload): 
   return mapWeekendBlockerRow((rows as unknown as WeekendBlockerRow[])[0]);
 }
 
-export async function updateWeekendBlocker(blockerId: string, input: UpdateWeekendBlockerPayload): Promise<WeekendBlocker | null> {
+export async function updateWeekendBlocker(blockerId: string, input: LegacyUpdateWeekendBlockerPayload): Promise<WeekendBlocker | null> {
   await ensureSchema();
   const sql = getSql();
   
