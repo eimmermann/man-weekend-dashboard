@@ -7,7 +7,7 @@ export function getAllWeekendsInYear(year: number): Array<{ startDate: string; e
   const end = new Date(year, 11, 31);
   
   // Find first Thursday of the year
-  let current = new Date(start);
+  const current = new Date(start);
   while (current.getDay() !== 4) {
     current.setDate(current.getDate() + 1);
   }
@@ -159,7 +159,6 @@ export function calculateWeekendBlocks(eventDate: string, weekendChoice: 'before
 // Calculate weekend blocks for recurring events across multiple years
 export function calculateRecurringWeekendBlocks(eventDate: string, weekendChoice: 'before' | 'after' | 'both', years: number[]): Array<{ weekendStartDate: string; year: number }> {
   const [yearStr, monthStr, dayStr] = eventDate.split('-');
-  const baseYear = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10) - 1;
   const day = parseInt(dayStr, 10);
   
@@ -167,7 +166,6 @@ export function calculateRecurringWeekendBlocks(eventDate: string, weekendChoice
   
   for (const year of years) {
     // Adjust event date to target year
-    const adjustedDate = new Date(year, month, day);
     const adjustedDateStr = `${year}-${monthStr}-${dayStr}`;
     const calculated = calculateWeekendBlocks(adjustedDateStr, weekendChoice, year);
     

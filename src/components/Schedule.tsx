@@ -17,7 +17,7 @@ type Activity = {
   attendeeIds?: string[];
 };
 
-const STORAGE_KEY = "mw-schedule-activities";
+// const STORAGE_KEY = "mw-schedule-activities"; // no longer used
 
 const DAY_START_HOUR = 7;  // earliest shown hour
 const DAY_END_HOUR = 24;   // latest shown hour
@@ -78,7 +78,14 @@ export default function Schedule() {
     e.preventDefault();
     if (!title.trim()) return;
     if (!isTripDate(date, tripStart, tripEnd)) return;
-    const payload: any = { title: title.trim(), date, start, end, color, notes: notes.trim() || undefined };
+    const payload: { title: string; date: string; start: string; end: string; color?: string; notes?: string; attendeeIds?: string[] } = {
+      title: title.trim(),
+      date,
+      start,
+      end,
+      color,
+      notes: notes.trim() || undefined,
+    };
     if (attendeeIds && attendeeIds.length > 0) payload.attendeeIds = attendeeIds;
     if (editId) {
       await fetch(`/api/schedule/${encodeURIComponent(editId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -318,8 +325,8 @@ export default function Schedule() {
                             {!compact && previewHeight >= 38 && (
                               <div className="px-2 pb-1 text-[10px] opacity-80">{hhmmToAmPm(a.start)} – {hhmmToAmPm(a.end)}</div>
                             )}
-                            {!compact && previewHeight >= 60 && (a as any).notes && (
-                              <div className="px-2 pb-1 text-[10px] opacity-90 truncate">{(a as any).notes}</div>
+                            {!compact && previewHeight >= 60 && a.notes && (
+                              <div className="px-2 pb-1 text-[10px] opacity-90 truncate">{a.notes}</div>
                             )}
                             <button onClick={(ev) => { ev.stopPropagation(); removeActivity(a.id); }} className="absolute top-0.5 right-1 text-[10px] opacity-80 hover:opacity-100">×</button>
                             {numAttendees > 0 && (
@@ -451,16 +458,16 @@ export default function Schedule() {
                 <div className="text-xs opacity-70">Color</div>
                 <div className={`h-4 w-4 rounded-full ${swatchBg(selectedActivity.color || 'emerald')}`} />
               </div>
-              {(selectedActivity as any).notes && (
+              {selectedActivity.notes && (
                 <div>
                   <div className="text-xs opacity-70">Notes</div>
-                  <div className="text-sm whitespace-pre-wrap opacity-90">{(selectedActivity as any).notes}</div>
+                  <div className="text-sm whitespace-pre-wrap opacity-90">{selectedActivity.notes}</div>
                 </div>
               )}
               <div>
-                <div className="text-xs opacity-70">Attendees {(selectedActivity as any).attendeeIds ? `(${(selectedActivity as any).attendeeIds.length})` : ''}</div>
+                <div className="text-xs opacity-70">Attendees {selectedActivity.attendeeIds ? `(${selectedActivity.attendeeIds.length})` : ''}</div>
                 <div className="text-sm opacity-90">
-                  {(((selectedActivity as any).attendeeIds as string[]) || []).map(id => (attendees || []).find(a => a.id === id)?.name || 'Unknown').join(', ')}
+                  {(selectedActivity.attendeeIds ?? []).map(id => (attendees || []).find(a => a.id === id)?.name || 'Unknown').join(', ')}
                 </div>
               </div>
             </div>
@@ -473,8 +480,8 @@ export default function Schedule() {
                   setStart(selectedActivity.start);
                   setEnd(selectedActivity.end);
                   setColor(selectedActivity.color || 'emerald');
-                  setNotes((selectedActivity as any).notes || '');
-                  setAttendeeIds(((selectedActivity as any).attendeeIds as string[]) || []);
+                  setNotes(selectedActivity.notes || '');
+                  setAttendeeIds(selectedActivity.attendeeIds || []);
                   setSelectedActivity(null);
                   setShowModal(true);
                 }}

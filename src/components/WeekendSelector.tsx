@@ -20,7 +20,7 @@ export default function WeekendSelector() {
   const [hasMounted, setHasMounted] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState<WeekendBlocker | null>(null);
-  const [selectedWeekend, setSelectedWeekend] = useState<string | null>(null);
+  const [, setSelectedWeekend] = useState<string | null>(null);
 
   useEffect(() => {
     setHasMounted(true);
@@ -273,7 +273,7 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
 
       console.log('Event created successfully, calling onSuccess');
       await onSuccess();
-    } catch (err) {
+    } catch {
       setError('Failed to create event');
       setSubmitting(false);
     }
@@ -516,7 +516,7 @@ function EditBlockerModal({
       }
 
       onSuccess();
-    } catch (err) {
+    } catch {
       setError('Failed to update blocker');
     } finally {
       setSubmitting(false);
@@ -538,7 +538,7 @@ function EditBlockerModal({
       }
 
       onSuccess();
-    } catch (err) {
+    } catch {
       setError('Failed to delete blocker');
     } finally {
       setDeleting(false);

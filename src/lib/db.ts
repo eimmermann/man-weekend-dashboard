@@ -1049,9 +1049,6 @@ async function generateBlockedWeekendsForEvent(event: WeekendEvent, targetYear: 
   
   if (event.isRecurring) {
     // For recurring events, generate blocks for the target year based on the event date
-    const [eventYearStr] = event.eventDate.split('-');
-    const eventYear = parseInt(eventYearStr, 10);
-    
     // Calculate blocks for the target year (adjusting the event date to target year)
     const blocks = calculateRecurringWeekendBlocks(event.eventDate, event.weekendChoice, [targetYear]);
     
@@ -1193,7 +1190,7 @@ export async function listWeekendBlockers(year?: number): Promise<WeekendBlocker
   }
   
   // Convert to legacy format
-  for (const [weekendStart, blocks] of byWeekend.entries()) {
+  for (const [, blocks] of byWeekend.entries()) {
     for (const block of blocks) {
       blockers.push({
         id: block.id,
@@ -1295,7 +1292,7 @@ export function getAllWeekendsInYear(year: number): Array<{ startDate: string; e
   const end = new Date(year, 11, 31);
   
   // Find first Thursday of the year
-  let current = new Date(start);
+  const current = new Date(start);
   while (current.getDay() !== 4) {
     current.setDate(current.getDate() + 1);
   }

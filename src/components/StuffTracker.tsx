@@ -10,8 +10,8 @@ export default function StuffTracker() {
   const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
   const { data: entries = [], mutate } = useSWR<StuffEntry[]>('/api/stuff', fetcher);
   const { data: combined = { items: [], categories: [] } as { items: StuffItem[]; categories: string[] } } = useSWR('/api/stuff/items', fetcher);
-  const items = (combined?.items || []) as StuffItem[];
-  const categories = (combined?.categories || []) as string[];
+  const items = useMemo(() => (combined?.items || []) as StuffItem[], [combined]);
+  const categories = useMemo(() => (combined?.categories || []) as string[], [combined]);
 
   const [thing, setThing] = useState('');
   const [qty, setQty] = useState<number>(1);
