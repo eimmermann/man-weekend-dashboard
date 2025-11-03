@@ -114,7 +114,6 @@ export default function RandomPicker() {
   }
 
   // Build lists for rendering below
-  const availableAttendees = attendees?.filter(a => selectedAttendees.includes(a.id)) || [];
   const selectedCustomNames = customNames.filter(c => selectedAttendees.includes(c.id));
   // no 3D wheel; simple flashing selection
 

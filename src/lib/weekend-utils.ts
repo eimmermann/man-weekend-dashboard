@@ -158,9 +158,7 @@ export function calculateWeekendBlocks(eventDate: string, weekendChoice: 'before
 
 // Calculate weekend blocks for recurring events across multiple years
 export function calculateRecurringWeekendBlocks(eventDate: string, weekendChoice: 'before' | 'after' | 'both', years: number[]): Array<{ weekendStartDate: string; year: number }> {
-  const [yearStr, monthStr, dayStr] = eventDate.split('-');
-  const month = parseInt(monthStr, 10) - 1;
-  const day = parseInt(dayStr, 10);
+  const [, monthStr, dayStr] = eventDate.split('-');
   
   const blocks: Array<{ weekendStartDate: string; year: number }> = [];
   

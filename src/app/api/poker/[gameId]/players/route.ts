@@ -10,9 +10,9 @@ const upsertSchema = z.object({
   status: z.enum(['active', 'finished']).optional(),
 });
 
-export async function POST(req: Request, context: { params: { gameId: string } }) {
+export async function POST(req: Request, context: unknown) {
   try {
-    const gameId = String(context?.params?.gameId || '');
+    const gameId = String((context as { params?: { gameId?: string } })?.params?.gameId || '');
     const body = await req.json();
     const parsed = upsertSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
