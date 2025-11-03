@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
-import type { Attendee, Expense, PickleballGame, ScheduleActivity } from '@/types';
+import type { Attendee, Expense, PickleballGame, ScheduleActivity, WeekendBlocker, CreateWeekendBlockerPayload, UpdateWeekendBlockerPayload, WeekendEvent, BlockedWeekend, CreateWeekendEventPayload, UpdateWeekendEventPayload } from '@/types';
 import { ensureSchema, getSql } from '@/lib/neon';
+import { calculateWeekendBlocks, calculateRecurringWeekendBlocks } from './weekend-utils';
 
 type AttendeeRow = {
   id: string;
@@ -880,4 +881,493 @@ export function computePokerSettlement(balances: Array<{ attendeeId: string; net
     transfers.push({ fromAttendeeId: from, toAttendeeId: to, amount: toDollars(cents) });
   }
   return transfers;
+}
+
+// -----------------------
+// Weekend events and blocked weekends
+// -----------------------
+
+type WeekendEventRow = {
+  id: string;
+  attendee_id: string;
+  event_name: string;
+  event_date: string;
+  weekend_choice: string;
+  is_recurring: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type BlockedWeekendRow = {
+  id: string;
+  event_id: string;
+  attendee_id: string;
+  weekend_start_date: string;
+  year: number;
+  created_at: string;
+};
+
+function mapWeekendEventRow(row: WeekendEventRow): WeekendEvent {
+  return {
+    id: String(row.id),
+    attendeeId: String(row.attendee_id),
+    eventName: String(row.event_name),
+    eventDate: new Date(String(row.event_date)).toISOString().split('T')[0],
+    weekendChoice: row.weekend_choice as 'before' | 'after' | 'both',
+    isRecurring: Boolean(row.is_recurring),
+    createdAt: new Date(String(row.created_at)).toISOString(),
+    updatedAt: new Date(String(row.updated_at)).toISOString(),
+  };
+}
+
+function mapBlockedWeekendRow(row: BlockedWeekendRow, eventData?: WeekendEventRow): BlockedWeekend {
+  const blocked: BlockedWeekend = {
+    id: String(row.id),
+    eventId: String(row.event_id),
+    attendeeId: String(row.attendee_id),
+    weekendStartDate: new Date(String(row.weekend_start_date)).toISOString().split('T')[0],
+    year: Number(row.year),
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+  
+  if (eventData) {
+    blocked.eventName = String(eventData.event_name);
+    blocked.eventDate = new Date(String(eventData.event_date)).toISOString().split('T')[0];
+  }
+  
+  return blocked;
+}
+
+// Legacy mapping function for backwards compatibility
+function mapWeekendBlockerRow(row: WeekendBlockerRow): WeekendBlocker {
+  const eventDate = row.event_date 
+    ? new Date(String(row.event_date)).toISOString().split('T')[0]
+    : new Date(String(row.weekend_start_date)).toISOString().split('T')[0];
+  
+  return {
+    id: String(row.id),
+    attendeeId: String(row.attendee_id),
+    eventName: String(row.event_name),
+    eventDate,
+    weekendStartDate: new Date(String(row.weekend_start_date)).toISOString().split('T')[0],
+    isRecurring: Boolean(row.is_recurring),
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+type WeekendBlockerRow = {
+  id: string;
+  attendee_id: string;
+  event_name: string;
+  event_date: string | null;
+  weekend_start_date: string;
+  is_recurring: boolean;
+  created_at: string;
+};
+
+// New event-based functions
+export async function listWeekendEvents(): Promise<WeekendEvent[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at, updated_at
+    from weekend_events
+    order by event_date asc, created_at asc
+  `;
+  return (rows as unknown as WeekendEventRow[]).map(mapWeekendEventRow);
+}
+
+export async function listBlockedWeekends(year?: number): Promise<BlockedWeekend[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const targetYear = year ?? 2026;
+  
+  try {
+    const rows = await sql`
+      select 
+        bw.id, bw.event_id, bw.attendee_id, bw.weekend_start_date, bw.year, bw.created_at,
+        e.event_name, e.event_date
+      from blocked_weekends bw
+      join weekend_events e on e.id = bw.event_id
+      where bw.year = ${targetYear}
+      order by bw.weekend_start_date asc, bw.created_at asc
+    `;
+    
+    // Handle empty results gracefully
+    if (!rows || (Array.isArray(rows) && rows.length === 0)) {
+      return [];
+    }
+    
+    return (rows as unknown as Array<{
+      id: string;
+      event_id: string;
+      attendee_id: string;
+      weekend_start_date: string;
+      year: number;
+      created_at: string;
+      event_name: string;
+      event_date: string;
+    }>).map(row => {
+      const blockRow: BlockedWeekendRow = {
+        id: row.id,
+        event_id: row.event_id,
+        attendee_id: row.attendee_id,
+        weekend_start_date: row.weekend_start_date,
+        year: row.year,
+        created_at: row.created_at,
+      };
+      
+      const eventRow: WeekendEventRow = {
+        id: row.event_id,
+        attendee_id: row.attendee_id,
+        event_name: row.event_name,
+        event_date: row.event_date,
+        weekend_choice: '',
+        is_recurring: false,
+        created_at: row.created_at,
+        updated_at: row.created_at,
+      };
+      
+      return mapBlockedWeekendRow(blockRow, eventRow);
+    });
+  } catch (error) {
+    // If tables don't exist yet or there's a SQL error, return empty array
+    console.error('Error querying blocked weekends:', error);
+    // Check if error is about missing table
+    if (error instanceof Error && error.message.includes('does not exist')) {
+      // Tables haven't been created yet, return empty array
+      return [];
+    }
+    throw error;
+  }
+}
+
+// Generate blocked weekends from an event for a specific year
+async function generateBlockedWeekendsForEvent(event: WeekendEvent, targetYear: number): Promise<void> {
+  await ensureSchema();
+  const sql = getSql();
+  
+  if (event.isRecurring) {
+    // For recurring events, generate blocks for the target year based on the event date
+    const [eventYearStr] = event.eventDate.split('-');
+    const eventYear = parseInt(eventYearStr, 10);
+    
+    // Calculate blocks for the target year (adjusting the event date to target year)
+    const blocks = calculateRecurringWeekendBlocks(event.eventDate, event.weekendChoice, [targetYear]);
+    
+    for (const block of blocks) {
+      const blockId = nanoid();
+      await sql`
+        insert into blocked_weekends (id, event_id, attendee_id, weekend_start_date, year, created_at)
+        values (${blockId}, ${event.id}, ${event.attendeeId}, ${block.weekendStartDate}, ${block.year}, now())
+        on conflict (event_id, weekend_start_date) do nothing
+      `;
+    }
+  } else {
+    // For non-recurring events, only generate blocks if the event is in the target year
+    const blocks = calculateWeekendBlocks(event.eventDate, event.weekendChoice, targetYear);
+    
+    for (const weekendStart of blocks) {
+      const blockId = nanoid();
+      await sql`
+        insert into blocked_weekends (id, event_id, attendee_id, weekend_start_date, year, created_at)
+        values (${blockId}, ${event.id}, ${event.attendeeId}, ${weekendStart}, ${targetYear}, now())
+        on conflict (event_id, weekend_start_date) do nothing
+      `;
+    }
+  }
+}
+
+export async function createWeekendEvent(input: CreateWeekendEventPayload): Promise<WeekendEvent> {
+  await ensureSchema();
+  const sql = getSql();
+  const id = nanoid();
+  const eventName = input.eventName.trim();
+  const eventDate = input.eventDate;
+  const weekendChoice = input.weekendChoice;
+  const isRecurring = Boolean(input.isRecurring);
+  
+  // Create the event
+  const rows = await sql`
+    insert into weekend_events (id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at, updated_at)
+    values (${id}, ${input.attendeeId}, ${eventName}, ${eventDate}, ${weekendChoice}, ${isRecurring}, now(), now())
+    returning id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at, updated_at
+  `;
+  const event = mapWeekendEventRow((rows as unknown as WeekendEventRow[])[0]);
+  
+  // Generate blocked weekends for current year (2026) and future years if recurring
+  if (isRecurring) {
+    // For recurring events, generate blocks for next 10 years
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 10 }, (_, i) => currentYear + i);
+    for (const year of years) {
+      await generateBlockedWeekendsForEvent(event, year);
+    }
+  } else {
+    // For non-recurring, only generate for the year of the event
+    const [yearStr] = eventDate.split('-');
+    const eventYear = parseInt(yearStr, 10);
+    await generateBlockedWeekendsForEvent(event, eventYear);
+  }
+  
+  return event;
+}
+
+export async function updateWeekendEvent(eventId: string, input: UpdateWeekendEventPayload): Promise<WeekendEvent | null> {
+  await ensureSchema();
+  const sql = getSql();
+  
+  // Get existing event
+  const existing = await sql`
+    select id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at, updated_at
+    from weekend_events
+    where id = ${eventId}
+    limit 1
+  `;
+  const existingRow = (existing as unknown as WeekendEventRow[])[0];
+  if (!existingRow) return null;
+  
+  const next = {
+    eventName: input.eventName != null ? input.eventName.trim() : existingRow.event_name,
+    eventDate: input.eventDate ?? existingRow.event_date,
+    weekendChoice: input.weekendChoice ?? (existingRow.weekend_choice as 'before' | 'after' | 'both'),
+    isRecurring: input.isRecurring !== undefined ? Boolean(input.isRecurring) : existingRow.is_recurring,
+  };
+  
+  // Update the event
+  const rows = await sql`
+    update weekend_events
+    set event_name = ${next.eventName},
+        event_date = ${next.eventDate},
+        weekend_choice = ${next.weekendChoice},
+        is_recurring = ${next.isRecurring},
+        updated_at = now()
+    where id = ${eventId}
+    returning id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at, updated_at
+  `;
+  const updated = (rows as unknown as WeekendEventRow[])[0];
+  if (!updated) return null;
+  
+  const event = mapWeekendEventRow(updated);
+  
+  // Delete all existing blocked weekends for this event
+  await sql`delete from blocked_weekends where event_id = ${eventId}`;
+  
+  // Regenerate blocked weekends
+  if (event.isRecurring) {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 10 }, (_, i) => currentYear + i);
+    for (const year of years) {
+      await generateBlockedWeekendsForEvent(event, year);
+    }
+  } else {
+    const [yearStr] = event.eventDate.split('-');
+    const eventYear = parseInt(yearStr, 10);
+    await generateBlockedWeekendsForEvent(event, eventYear);
+  }
+  
+  return event;
+}
+
+export async function deleteWeekendEvent(eventId: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  // Delete event (blocked weekends will be deleted via cascade)
+  const rows = await sql`delete from weekend_events where id = ${eventId} returning id`;
+  return (rows as unknown as { id: string }[]).length > 0;
+}
+
+// Legacy function for backwards compatibility
+export async function listWeekendBlockers(year?: number): Promise<WeekendBlocker[]> {
+  // Convert blocked weekends to legacy format
+  const blocked = await listBlockedWeekends(year);
+  const blockers: WeekendBlocker[] = [];
+  
+  // Group by weekend start date
+  const byWeekend = new Map<string, BlockedWeekend[]>();
+  for (const block of blocked) {
+    if (!byWeekend.has(block.weekendStartDate)) {
+      byWeekend.set(block.weekendStartDate, []);
+    }
+    byWeekend.get(block.weekendStartDate)!.push(block);
+  }
+  
+  // Convert to legacy format
+  for (const [weekendStart, blocks] of byWeekend.entries()) {
+    for (const block of blocks) {
+      blockers.push({
+        id: block.id,
+        attendeeId: block.attendeeId,
+        eventName: block.eventName || 'Unknown Event',
+        eventDate: block.eventDate || block.weekendStartDate,
+        weekendStartDate: block.weekendStartDate,
+        isRecurring: false, // We don't track this in the legacy format easily
+        createdAt: block.createdAt,
+      });
+    }
+  }
+  
+  return blockers;
+}
+
+export async function createWeekendBlocker(input: CreateWeekendBlockerPayload): Promise<WeekendBlocker> {
+  await ensureSchema();
+  const sql = getSql();
+  const id = nanoid();
+  const eventName = input.eventName.trim();
+  const eventDate = input.eventDate;
+  const weekendStartDate = input.weekendStartDate;
+  const isRecurring = Boolean(input.isRecurring);
+  
+  // Validate that the weekend_start_date is a Thursday (parse as local date to avoid timezone issues)
+  const [yearStr, monthStr, dayStr] = weekendStartDate.split('-');
+  const date = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10));
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek !== 4) {
+    throw new Error(`weekend_start_date must be a Thursday (received day ${dayOfWeek} for date ${weekendStartDate})`);
+  }
+  
+  const rows = await sql`
+    insert into weekend_blockers (id, attendee_id, event_name, event_date, weekend_start_date, is_recurring)
+    values (${id}, ${input.attendeeId}, ${eventName}, ${eventDate}, ${weekendStartDate}, ${isRecurring})
+    returning id, attendee_id, event_name, event_date, weekend_start_date, is_recurring, created_at
+  `;
+  return mapWeekendBlockerRow((rows as unknown as WeekendBlockerRow[])[0]);
+}
+
+export async function updateWeekendBlocker(blockerId: string, input: UpdateWeekendBlockerPayload): Promise<WeekendBlocker | null> {
+  await ensureSchema();
+  const sql = getSql();
+  
+  // Get existing blocker
+  const existing = await sql`
+    select id, attendee_id, event_name, event_date, weekend_start_date, is_recurring, created_at
+    from weekend_blockers
+    where id = ${blockerId}
+    limit 1
+  `;
+  const existingRow = (existing as unknown as WeekendBlockerRow[])[0];
+  if (!existingRow) return null;
+  
+  const next = {
+    attendeeId: input.attendeeId ?? existingRow.attendee_id,
+    eventName: input.eventName != null ? input.eventName.trim() : existingRow.event_name,
+    eventDate: input.eventDate ?? (existingRow.event_date || existingRow.weekend_start_date),
+    weekendStartDate: input.weekendStartDate ?? existingRow.weekend_start_date,
+    isRecurring: input.isRecurring !== undefined ? Boolean(input.isRecurring) : existingRow.is_recurring,
+  };
+  
+  // Validate that the weekend_start_date is a Thursday if provided
+  if (input.weekendStartDate) {
+    const [yearStr, monthStr, dayStr] = next.weekendStartDate.split('-');
+    const date = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10));
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek !== 4) {
+      throw new Error('weekend_start_date must be a Thursday');
+    }
+  }
+  
+  const rows = await sql`
+    update weekend_blockers
+    set attendee_id = ${next.attendeeId},
+        event_name = ${next.eventName},
+        event_date = ${next.eventDate},
+        weekend_start_date = ${next.weekendStartDate},
+        is_recurring = ${next.isRecurring}
+    where id = ${blockerId}
+    returning id, attendee_id, event_name, event_date, weekend_start_date, is_recurring, created_at
+  `;
+  const updated = (rows as unknown as WeekendBlockerRow[])[0];
+  return updated ? mapWeekendBlockerRow(updated) : null;
+}
+
+export async function deleteWeekendBlocker(blockerId: string): Promise<boolean> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`delete from weekend_blockers where id = ${blockerId} returning id`;
+  return (rows as unknown as { id: string }[]).length > 0;
+}
+
+// Helper functions moved to weekend-utils.ts for client-side use
+export function getAllWeekendsInYear(year: number): Array<{ startDate: string; endDate: string; dateRange: string }> {
+  const weekends: Array<{ startDate: string; endDate: string; dateRange: string }> = [];
+  const start = new Date(year, 0, 1);
+  const end = new Date(year, 11, 31);
+  
+  // Find first Thursday of the year
+  let current = new Date(start);
+  while (current.getDay() !== 4) {
+    current.setDate(current.getDate() + 1);
+  }
+  
+  // Generate all Thursdays through the end of the year
+  while (current <= end) {
+    const thursday = new Date(current);
+    const sunday = new Date(current);
+    sunday.setDate(sunday.getDate() + 3);
+    
+    // Check if Sunday is still in the target year
+    if (sunday.getFullYear() === year || (sunday.getFullYear() === year + 1 && sunday.getMonth() === 0 && sunday.getDate() <= 3)) {
+      const startDate = thursday.toISOString().split('T')[0];
+      const endDate = sunday.toISOString().split('T')[0];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const dateRange = `${monthNames[thursday.getMonth()]} ${thursday.getDate()}-${sunday.getDate}, ${year}`;
+      weekends.push({ startDate, endDate, dateRange });
+    }
+    
+    // Move to next Thursday
+    current.setDate(current.getDate() + 7);
+  }
+  
+  return weekends;
+}
+
+// Helper function to get weekends grouped by availability
+export type WeekendAvailability = {
+  startDate: string;
+  endDate: string;
+  dateRange: string;
+  blockers: WeekendBlocker[];
+  blockerCount: number;
+};
+
+export function getWeekendAvailability(blockers: WeekendBlocker[], year: number = 2026): WeekendAvailability[] {
+  const weekends = getAllWeekendsInYear(year);
+  const blockersByDate = new Map<string, WeekendBlocker[]>();
+  
+  // Group blockers by weekend start date
+  for (const blocker of blockers) {
+    const key = blocker.weekendStartDate;
+    if (!blockersByDate.has(key)) {
+      blockersByDate.set(key, []);
+    }
+    blockersByDate.get(key)!.push(blocker);
+  }
+  
+  // Create availability info for each weekend
+  const availability: WeekendAvailability[] = weekends.map(weekend => {
+    const weekendBlockers = blockersByDate.get(weekend.startDate) || [];
+    return {
+      ...weekend,
+      blockers: weekendBlockers,
+      blockerCount: weekendBlockers.length,
+    };
+  });
+  
+  // Sort by availability: most free first (no blockers), then by blocker count ascending
+  availability.sort((a, b) => {
+    if (a.blockerCount === 0 && b.blockerCount > 0) return -1;
+    if (a.blockerCount > 0 && b.blockerCount === 0) return 1;
+    if (a.blockerCount === 0 && b.blockerCount === 0) {
+      // Both free, sort by date
+      return a.startDate.localeCompare(b.startDate);
+    }
+    // Both have blockers, sort by count ascending, then by date
+    if (a.blockerCount !== b.blockerCount) {
+      return a.blockerCount - b.blockerCount;
+    }
+    return a.startDate.localeCompare(b.startDate);
+  });
+  
+  return availability;
 }

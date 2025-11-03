@@ -14,6 +14,7 @@ import PickleballTracker from '@/components/PickleballTracker';
 import RandomPicker from '@/components/RandomPicker';
 import PokerTracker from '@/components/PokerTracker';
 import Schedule from '@/components/Schedule';
+import WeekendSelector from '@/components/WeekendSelector';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type TabKey = 'overview' | 'planning' | 'schedule' | 'games' | 'bill';
@@ -81,6 +82,7 @@ export default function HomeTabs() {
 
       {tab === 'planning' && (
         <div className="space-y-6">
+          <WeekendSelector />
           <StuffTracker />
         </div>
       )}

@@ -169,6 +169,92 @@ export function ensureSchema(): Promise<void> {
           primary key (activity_id, attendee_id)
         );
       `;
+
+      // Weekend events table - stores events that block weekends
+      await sql`
+        create table if not exists weekend_events (
+          id text primary key,
+          attendee_id text not null references attendees(id) on delete cascade,
+          event_name text not null,
+          event_date date not null,
+          weekend_choice text not null check (weekend_choice in ('before', 'after', 'both')),
+          is_recurring boolean not null default false,
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now()
+        );
+      `;
+      
+      // Blocked weekends table - derived from events, year-specific
+      await sql`
+        create table if not exists blocked_weekends (
+          id text primary key,
+          event_id text not null references weekend_events(id) on delete cascade,
+          attendee_id text not null references attendees(id) on delete cascade,
+          weekend_start_date date not null,
+          year integer not null,
+          created_at timestamptz not null default now(),
+          unique(event_id, weekend_start_date)
+        );
+      `;
+      
+      // Create index for efficient year-based queries
+      await sql`
+        create index if not exists idx_blocked_weekends_year on blocked_weekends(year, weekend_start_date);
+      `;
+      
+      // Migrate existing weekend_blockers to new schema if they exist
+      // Check if weekend_blockers table exists first
+      try {
+        const tableCheck = await sql`
+          select exists (
+            select from information_schema.tables 
+            where table_schema = 'public' 
+            and table_name = 'weekend_blockers'
+          ) as table_exists;
+        `;
+        const hasTable = (tableCheck as unknown as Array<{ table_exists: boolean }>)[0]?.table_exists;
+        
+        if (hasTable) {
+          await sql`
+            insert into weekend_events (id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at)
+            select 
+              id,
+              attendee_id,
+              event_name,
+              coalesce(event_date, weekend_start_date) as event_date,
+              case 
+                when weekend_start_date <= coalesce(event_date, weekend_start_date) then 'after'
+                else 'before'
+              end as weekend_choice,
+              is_recurring,
+              created_at
+            from weekend_blockers
+            where not exists (select 1 from weekend_events where weekend_events.id = weekend_blockers.id)
+            on conflict do nothing;
+          `;
+          
+          await sql`
+            insert into blocked_weekends (id, event_id, attendee_id, weekend_start_date, year, created_at)
+            select 
+              (id || '-' || weekend_start_date) as id,
+              id as event_id,
+              attendee_id,
+              weekend_start_date,
+              extract(year from weekend_start_date)::integer as year,
+              created_at
+            from weekend_blockers
+            where not exists (
+              select 1 from blocked_weekends 
+              where blocked_weekends.event_id = weekend_blockers.id 
+              and blocked_weekends.weekend_start_date = weekend_blockers.weekend_start_date
+            )
+            on conflict do nothing;
+          `;
+        }
+      } catch (migrationError) {
+        // Migration failed, but continue - tables will be created on first use
+        console.warn('Migration from weekend_blockers failed:', migrationError);
+      }
     })();
   }
   return schemaInitialized;

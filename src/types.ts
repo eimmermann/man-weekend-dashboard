@@ -135,3 +135,56 @@ export type PokerPayment = {
   toAttendeeId: string;
   paid: boolean;
 };
+
+// Weekend events and blockers
+export type WeekendEvent = {
+  id: string;
+  attendeeId: string;
+  eventName: string;
+  eventDate: string; // YYYY-MM-DD (actual date of the event, can be any year)
+  weekendChoice: 'before' | 'after' | 'both';
+  isRecurring: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BlockedWeekend = {
+  id: string;
+  eventId: string;
+  attendeeId: string;
+  weekendStartDate: string; // YYYY-MM-DD (Thursday of the weekend)
+  year: number;
+  createdAt: string;
+  // Joined data from event
+  eventName?: string;
+  eventDate?: string;
+};
+
+export type CreateWeekendEventPayload = {
+  attendeeId: string;
+  eventName: string;
+  eventDate: string; // YYYY-MM-DD (actual date of the event)
+  weekendChoice: 'before' | 'after' | 'both';
+  isRecurring: boolean;
+};
+
+export type UpdateWeekendEventPayload = Partial<Omit<CreateWeekendEventPayload, 'attendeeId'>>;
+
+// Legacy type for backwards compatibility in UI
+export type WeekendBlocker = {
+  id: string;
+  attendeeId: string;
+  eventName: string;
+  eventDate: string;
+  weekendStartDate: string;
+  isRecurring: boolean;
+  createdAt: string;
+};
+
+export type WeekendAvailability = {
+  startDate: string;
+  endDate: string;
+  dateRange: string;
+  blockers: WeekendBlocker[];
+  blockerCount: number;
+};
