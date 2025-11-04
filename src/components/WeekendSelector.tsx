@@ -5,18 +5,14 @@ import useSWR from 'swr';
 import { createPortal } from 'react-dom';
 import type { Attendee, WeekendBlocker } from '@/types';
 import { getWeekendAvailability } from '@/lib/weekend-utils';
+import { useYear } from '@/context/YearContext';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function WeekendSelector() {
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
-  const { data: blockers = [], mutate, error: blockersError, isLoading: loadingBlockers } = useSWR<WeekendBlocker[]>('/api/weekend-blockers?year=2026', fetcher);
-  
-  useEffect(() => {
-    console.log('Blockers data updated:', blockers);
-    console.log('Blockers error:', blockersError);
-    console.log('Loading blockers:', loadingBlockers);
-  }, [blockers, blockersError, loadingBlockers]);
+  const { year } = useYear();
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
+  const { data: blockers = [], mutate, error: blockersError, isLoading: loadingBlockers } = useSWR<WeekendBlocker[]>(`/api/weekend-blockers?year=${year}`, fetcher);
   const [hasMounted, setHasMounted] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState<WeekendBlocker | null>(null);
@@ -27,8 +23,8 @@ export default function WeekendSelector() {
   }, []);
 
   const availability = useMemo(() => {
-    return getWeekendAvailability(blockers, 2026);
-  }, [blockers]);
+    return getWeekendAvailability(blockers, year);
+  }, [blockers, year]);
 
   const attendeeById = useMemo(() => new Map(attendees.map(a => [a.id, a.name] as const)), [attendees]);
 
@@ -138,6 +134,7 @@ export default function WeekendSelector() {
 }
 
 function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Attendee[]; onClose: () => void; onSuccess: () => void }) {
+  const { year } = useYear();
   const [attendeeId, setAttendeeId] = useState('');
   const [eventName, setEventName] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -208,12 +205,12 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
     // Parse date string as local date to avoid timezone issues
     const [yearStr, monthStr, dayStr] = selectedDate.split('-');
     const date = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10));
-    const year = date.getFullYear();
+    const dateYear = date.getFullYear();
     const dayOfWeek = date.getDay();
     
-    // Ensure it's in 2026
-    if (year !== 2026) {
-      setError('Please select a date in 2026');
+    // Ensure it's in the selected year
+    if (dateYear !== year) {
+      setError(`Please select a date in ${year}`);
       return;
     }
 
@@ -349,8 +346,8 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
                 setSelectedDate(e.target.value);
                 setError(null);
               }}
-              min="2026-01-01"
-              max="2026-12-31"
+              min={`${year}-01-01`}
+              max={`${year}-12-31`}
               required
             />
           </div>
@@ -408,9 +405,9 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
                   // Handle month spanning weekends
                   let dateRange: string;
                   if (date.getMonth() === sunday.getMonth()) {
-                    dateRange = `${monthNames[date.getMonth()]} ${date.getDate()}-${sunday.getDate()}, 2026`;
+                    dateRange = `${monthNames[date.getMonth()]} ${date.getDate()}-${sunday.getDate()}, ${year}`;
                   } else {
-                    dateRange = `${monthNames[date.getMonth()]} ${date.getDate()} - ${monthNames[sunday.getMonth()]} ${sunday.getDate()}, 2026`;
+                    dateRange = `${monthNames[date.getMonth()]} ${date.getDate()} - ${monthNames[sunday.getMonth()]} ${sunday.getDate()}, ${year}`;
                   }
                   
                   return (
@@ -487,10 +484,11 @@ function EditBlockerModal({
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const { year } = useYear();
   const attendeeById = useMemo(() => new Map(attendees.map(a => [a.id, a.name] as const)), [attendees]);
   const weekendDate = new Date(blocker.weekendStartDate);
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const dateRange = `${monthNames[weekendDate.getMonth()]} ${weekendDate.getDate()}-${weekendDate.getDate() + 3}, 2026`;
+  const dateRange = `${monthNames[weekendDate.getMonth()]} ${weekendDate.getDate()}-${weekendDate.getDate() + 3}, ${year}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -15,9 +15,13 @@ const createGameSchema = z.object({
   notes: z.string().optional(),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const games = await listPickleballGames();
+    const searchParams = req.nextUrl.searchParams;
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+    
+    const games = await listPickleballGames(year);
     return NextResponse.json(games);
   } catch (error) {
     console.error('Error listing pickleball games:', error);

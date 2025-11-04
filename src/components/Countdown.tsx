@@ -1,6 +1,7 @@
 "use client";
 
 import { TRIP_START_ISO, TRIP_END_ISO, TRIP_NAME, AIRBNB_URL, HOUSE_ADDRESS } from '@/lib/constants';
+import { useYear } from '@/context/YearContext';
 import Image from 'next/image';
 import { differenceInSeconds, format } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
@@ -18,6 +19,8 @@ function secondsToParts(total: number) {
 export default function Countdown() {
   const [now, setNow] = useState(() => new Date());
   const [mounted, setMounted] = useState(false);
+  const { year, currentYearSettings } = useYear();
+  
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
@@ -26,8 +29,35 @@ export default function Countdown() {
     setMounted(true);
   }, []);
 
-  const start = useMemo(() => new Date(TRIP_START_ISO), []);
-  const end = useMemo(() => new Date(TRIP_END_ISO), []);
+  // Use per-year settings if available, fall back to constants
+  const tripName = `Man Weekend ${year}`;
+  const airbnbUrl = currentYearSettings?.airbnbUrl || AIRBNB_URL;
+  const address = currentYearSettings?.address || HOUSE_ADDRESS;
+  const imageUrl = currentYearSettings?.imageUrl || null;
+  
+  const start = useMemo(() => {
+    if (currentYearSettings?.tripStartDate) {
+      const date = new Date(currentYearSettings.tripStartDate + 'T00:00:00');
+      // Validate the date
+      if (isNaN(date.getTime())) {
+        return new Date(TRIP_START_ISO);
+      }
+      return date;
+    }
+    return new Date(TRIP_START_ISO);
+  }, [currentYearSettings]);
+  
+  const end = useMemo(() => {
+    if (currentYearSettings?.tripEndDate) {
+      const date = new Date(currentYearSettings.tripEndDate + 'T23:59:59');
+      // Validate the date
+      if (isNaN(date.getTime())) {
+        return new Date(TRIP_END_ISO);
+      }
+      return date;
+    }
+    return new Date(TRIP_END_ISO);
+  }, [currentYearSettings]);
   const secsToStart = Math.max(0, differenceInSeconds(start, now));
   // const secsToEnd = Math.max(0, differenceInSeconds(end, now));
 
@@ -51,10 +81,10 @@ export default function Countdown() {
           <h2
             className="text-4xl md:text-6xl font-light md:font-normal leading-tight tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] text-transparent bg-clip-text bg-gradient-to-r from-indigo-100 via-fuchsia-100 to-pink-100"
           >
-            {TRIP_NAME}
+            {tripName}
           </h2>
           <a
-            href={AIRBNB_URL}
+            href={airbnbUrl}
             target="_blank"
             rel="noreferrer"
             className="text-xs md:text-sm bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap"
@@ -70,13 +100,13 @@ export default function Countdown() {
             {format(start, 'MMM d, yyyy')} → {format(end, 'MMM d, yyyy')}
           </span>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(HOUSE_ADDRESS)}`}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 hover:bg-white/15 px-3 py-1.5 text-xs md:text-sm break-words"
           >
             <span aria-hidden>📍</span>
-            {HOUSE_ADDRESS}
+            {address}
           </a>
         </div>
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">

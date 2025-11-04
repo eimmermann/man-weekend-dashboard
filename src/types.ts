@@ -1,7 +1,40 @@
+// Year-specific app settings
+export type AppYear = {
+  year: number;
+  airbnbUrl?: string | null;
+  imageUrl?: string | null;
+  address?: string | null;
+  tripStartDate?: string | null; // ISO date (YYYY-MM-DD)
+  tripEndDate?: string | null; // ISO date (YYYY-MM-DD)
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateAppYearPayload = {
+  year: number;
+  copyAttendeesFrom?: number;
+  settings?: {
+    airbnbUrl?: string;
+    imageUrl?: string;
+    address?: string;
+    tripStartDate?: string;
+    tripEndDate?: string;
+  };
+};
+
+export type UpdateAppYearPayload = {
+  airbnbUrl?: string;
+  imageUrl?: string;
+  address?: string;
+  tripStartDate?: string;
+  tripEndDate?: string;
+};
+
 export type Attendee = {
   id: string;
   name: string;
   startingAddress: string;
+  year: number;
   arrivalDate?: string | null; // ISO date (YYYY-MM-DD)
   departureDate?: string | null; // ISO date (YYYY-MM-DD)
   location?: {
@@ -77,6 +110,7 @@ export type StuffEntry = {
   attendeeId: string;
   attendeeName: string;
   quantity: number;
+  year: number;
   createdAt: string;
 };
 

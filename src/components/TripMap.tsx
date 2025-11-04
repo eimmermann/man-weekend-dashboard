@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
+import { useYear } from '@/context/YearContext';
 import type { Attendee } from '@/types';
 import { geocodeHouse } from '@/lib/geocode';
 import { HOUSE_ADDRESS } from '@/lib/constants';
@@ -10,7 +11,8 @@ import { APIProvider, Map, AdvancedMarker, Marker, useMap } from "@vis.gl/react-
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function TripMap() {
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { year } = useYear();
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   const [house, setHouse] = useState<{ lat: number; lng: number } | null>(null);
   const [mounted, setMounted] = useState(false);
 

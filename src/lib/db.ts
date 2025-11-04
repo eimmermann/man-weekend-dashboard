@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import type { Attendee, Expense, PickleballGame, ScheduleActivity, WeekendBlocker, WeekendEvent, BlockedWeekend, CreateWeekendEventPayload, UpdateWeekendEventPayload } from '@/types';
+import type { Attendee, Expense, PickleballGame, ScheduleActivity, WeekendBlocker, WeekendEvent, BlockedWeekend, CreateWeekendEventPayload, UpdateWeekendEventPayload, AppYear, CreateAppYearPayload, UpdateAppYearPayload } from '@/types';
 import { ensureSchema, getSql } from '@/lib/neon';
 import { calculateWeekendBlocks, calculateRecurringWeekendBlocks } from './weekend-utils';
 
@@ -7,6 +7,7 @@ type AttendeeRow = {
   id: string;
   name: string;
   starting_address: string;
+  year: number;
   arrival_date: string | null;
   departure_date: string | null;
   location_lat: number | null;
@@ -19,10 +20,47 @@ function mapAttendeeRow(row: AttendeeRow): Attendee {
     id: String(row.id),
     name: String(row.name),
     startingAddress: String(row.starting_address),
+    year: Number(row.year),
     arrivalDate: row.arrival_date ? String(row.arrival_date) : null,
     departureDate: row.departure_date ? String(row.departure_date) : null,
     location: row.location_lat != null && row.location_lng != null ? { lat: Number(row.location_lat), lng: Number(row.location_lng) } : null,
     createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+type AppYearRow = {
+  year: number;
+  airbnb_url: string | null;
+  image_url: string | null;
+  address: string | null;
+  trip_start_date: string | null;
+  trip_end_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function mapAppYearRow(row: AppYearRow): AppYear {
+  // Helper to format dates as YYYY-MM-DD
+  const formatDate = (dateValue: string | null): string | null => {
+    if (!dateValue) return null;
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return null;
+    // Format as YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  return {
+    year: Number(row.year),
+    airbnbUrl: row.airbnb_url || null,
+    imageUrl: row.image_url || null,
+    address: row.address || null,
+    tripStartDate: formatDate(row.trip_start_date),
+    tripEndDate: formatDate(row.trip_end_date),
+    createdAt: new Date(String(row.created_at)).toISOString(),
+    updatedAt: new Date(String(row.updated_at)).toISOString(),
   };
 }
 
@@ -59,33 +97,163 @@ function mapExpenseRow(row: ExpenseRow): Expense {
   };
 }
 
-export async function listAttendees(): Promise<Attendee[]> {
+export async function listAttendees(year?: number): Promise<Attendee[]> {
   await ensureSchema();
   const sql = getSql();
+  
+  if (year !== undefined) {
+    const rows = await sql`
+      select id, name, starting_address, year, arrival_date, departure_date, location_lat, location_lng, created_at
+      from attendees
+      where year = ${year}
+      order by created_at asc
+    `;
+    return (rows as unknown as AttendeeRow[]).map(mapAttendeeRow);
+  }
+  
   const rows = await sql`
-    select id, name, starting_address, arrival_date, departure_date, location_lat, location_lng, created_at
+    select id, name, starting_address, year, arrival_date, departure_date, location_lat, location_lng, created_at
     from attendees
     order by created_at asc
   `;
   return (rows as unknown as AttendeeRow[]).map(mapAttendeeRow);
 }
 
-export async function createAttendee(input: { name: string; startingAddress: string; arrivalDate?: string | null; departureDate?: string | null; location?: { lat: number; lng: number } | null }): Promise<Attendee> {
+export async function createAttendee(input: { name: string; startingAddress: string; year: number; arrivalDate?: string | null; departureDate?: string | null; location?: { lat: number; lng: number } | null }): Promise<Attendee> {
   await ensureSchema();
   const id = nanoid();
   const name = input.name.trim();
   const startingAddress = input.startingAddress.trim();
+  const year = input.year;
   const arrivalDate = input.arrivalDate ?? null;
   const departureDate = input.departureDate ?? null;
   const lat = input.location?.lat ?? null;
   const lng = input.location?.lng ?? null;
   const sql = getSql();
   const rows = await sql`
-    insert into attendees (id, name, starting_address, arrival_date, departure_date, location_lat, location_lng)
-    values (${id}, ${name}, ${startingAddress}, ${arrivalDate}, ${departureDate}, ${lat}, ${lng})
-    returning id, name, starting_address, arrival_date, departure_date, location_lat, location_lng, created_at
+    insert into attendees (id, name, starting_address, year, arrival_date, departure_date, location_lat, location_lng)
+    values (${id}, ${name}, ${startingAddress}, ${year}, ${arrivalDate}, ${departureDate}, ${lat}, ${lng})
+    returning id, name, starting_address, year, arrival_date, departure_date, location_lat, location_lng, created_at
   `;
   return mapAttendeeRow((rows as unknown as AttendeeRow[])[0]);
+}
+
+// App Year management functions
+export async function listAppYears(): Promise<AppYear[]> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select year, airbnb_url, image_url, address, trip_start_date, trip_end_date, created_at, updated_at
+    from app_years
+    order by year desc
+  `;
+  return (rows as unknown as AppYearRow[]).map(mapAppYearRow);
+}
+
+export async function getAppYear(year: number): Promise<AppYear | null> {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    select year, airbnb_url, image_url, address, trip_start_date, trip_end_date, created_at, updated_at
+    from app_years
+    where year = ${year}
+  `;
+  const typed = rows as unknown as AppYearRow[];
+  return typed.length > 0 ? mapAppYearRow(typed[0]) : null;
+}
+
+export async function createAppYear(input: CreateAppYearPayload): Promise<AppYear> {
+  await ensureSchema();
+  const sql = getSql();
+  const { year, settings, copyAttendeesFrom } = input;
+  
+  // Insert or update the year settings
+  const rows = await sql`
+    insert into app_years (year, airbnb_url, image_url, address, trip_start_date, trip_end_date)
+    values (
+      ${year},
+      ${settings?.airbnbUrl ?? null},
+      ${settings?.imageUrl ?? null},
+      ${settings?.address ?? null},
+      ${settings?.tripStartDate ?? null},
+      ${settings?.tripEndDate ?? null}
+    )
+    on conflict (year) do update
+    set airbnb_url = excluded.airbnb_url,
+        image_url = excluded.image_url,
+        address = excluded.address,
+        trip_start_date = excluded.trip_start_date,
+        trip_end_date = excluded.trip_end_date,
+        updated_at = now()
+    returning year, airbnb_url, image_url, address, trip_start_date, trip_end_date, created_at, updated_at
+  `;
+  
+  const newYear = mapAppYearRow((rows as unknown as AppYearRow[])[0]);
+  
+  // Copy attendees from previous year if requested
+  if (copyAttendeesFrom !== undefined) {
+    await sql`
+      insert into attendees (id, name, starting_address, year, created_at)
+      select 
+        id || '-' || ${year} as id,
+        name,
+        starting_address,
+        ${year} as year,
+        now() as created_at
+      from attendees
+      where year = ${copyAttendeesFrom}
+      on conflict (id) do nothing
+    `;
+  }
+  
+  // Generate blocked weekends for all recurring events for this year
+  try {
+    const events = await listWeekendEvents();
+    const recurringEvents = events.filter(e => e.isRecurring);
+    
+    for (const event of recurringEvents) {
+      const blocks = calculateRecurringWeekendBlocks(event.eventDate, event.weekendChoice, [year]);
+      
+      for (const block of blocks) {
+        await sql`
+          insert into blocked_weekends (id, event_id, attendee_id, weekend_start_date, year, created_at)
+          values (
+            ${nanoid()},
+            ${event.id},
+            ${event.attendeeId},
+            ${block.weekendStartDate},
+            ${block.year},
+            now()
+          )
+          on conflict (event_id, weekend_start_date) do nothing
+        `;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to generate recurring blocked weekends for new year:', error);
+  }
+  
+  return newYear;
+}
+
+export async function updateAppYear(year: number, input: UpdateAppYearPayload): Promise<AppYear | null> {
+  await ensureSchema();
+  const sql = getSql();
+  
+  const rows = await sql`
+    update app_years
+    set airbnb_url = coalesce(${input.airbnbUrl ?? null}, airbnb_url),
+        image_url = coalesce(${input.imageUrl ?? null}, image_url),
+        address = coalesce(${input.address ?? null}, address),
+        trip_start_date = coalesce(${input.tripStartDate ?? null}, trip_start_date),
+        trip_end_date = coalesce(${input.tripEndDate ?? null}, trip_end_date),
+        updated_at = now()
+    where year = ${year}
+    returning year, airbnb_url, image_url, address, trip_start_date, trip_end_date, created_at, updated_at
+  `;
+  
+  const typed = rows as unknown as AppYearRow[];
+  return typed.length > 0 ? mapAppYearRow(typed[0]) : null;
 }
 
 async function getExpenseById(expenseId: string): Promise<Expense | null> {
@@ -328,7 +496,7 @@ export async function updateAttendee(attendeeId: string, input: { name?: string;
 // -----------------------
 
 export type StuffItem = { id: string; name: string; category: string | null };
-export type StuffEntry = { id: string; itemId: string; itemName: string; itemCategory: string | null; attendeeId: string; attendeeName: string; quantity: number; createdAt: string };
+export type StuffEntry = { id: string; itemId: string; itemName: string; itemCategory: string | null; attendeeId: string; attendeeName: string; quantity: number; year: number; createdAt: string };
 
 export async function listStuffItems(): Promise<StuffItem[]> {
   await ensureSchema();
@@ -337,12 +505,44 @@ export async function listStuffItems(): Promise<StuffItem[]> {
   return (rows as unknown as { id: string; name: string; category: string | null }[]).map(r => ({ id: String(r.id), name: String(r.name), category: r.category ?? null }));
 }
 
-export async function listStuffEntries(): Promise<StuffEntry[]> {
+export async function listStuffEntries(year?: number): Promise<StuffEntry[]> {
   await ensureSchema();
   const sql = getSql();
+  
+  if (year !== undefined) {
+    const rows = await sql`
+      select se.id,
+             se.quantity,
+             se.year,
+             se.created_at,
+             si.id as item_id,
+             si.name as item_name,
+             si.category as item_category,
+             a.id as attendee_id,
+             a.name as attendee_name
+      from stuff_entries se
+      join stuff_items si on si.id = se.item_id
+      join attendees a on a.id = se.attendee_id
+      where se.year = ${year}
+      order by se.created_at desc
+    `;
+    return (rows as unknown as Array<{ id: string; quantity: number; year: number; created_at: string; item_id: string; item_name: string; item_category: string | null; attendee_id: string; attendee_name: string }>).map(r => ({
+      id: String(r.id),
+      itemId: String(r.item_id),
+      itemName: String(r.item_name),
+      itemCategory: r.item_category ?? null,
+      attendeeId: String(r.attendee_id),
+      attendeeName: String(r.attendee_name),
+      quantity: Number(r.quantity),
+      year: Number(r.year),
+      createdAt: new Date(String(r.created_at)).toISOString(),
+    }));
+  }
+  
   const rows = await sql`
     select se.id,
            se.quantity,
+           se.year,
            se.created_at,
            si.id as item_id,
            si.name as item_name,
@@ -354,7 +554,7 @@ export async function listStuffEntries(): Promise<StuffEntry[]> {
     join attendees a on a.id = se.attendee_id
     order by se.created_at desc
   `;
-  return (rows as unknown as Array<{ id: string; quantity: number; created_at: string; item_id: string; item_name: string; item_category: string | null; attendee_id: string; attendee_name: string }>).map(r => ({
+  return (rows as unknown as Array<{ id: string; quantity: number; year: number; created_at: string; item_id: string; item_name: string; item_category: string | null; attendee_id: string; attendee_name: string }>).map(r => ({
     id: String(r.id),
     itemId: String(r.item_id),
     itemName: String(r.item_name),
@@ -362,6 +562,7 @@ export async function listStuffEntries(): Promise<StuffEntry[]> {
     attendeeId: String(r.attendee_id),
     attendeeName: String(r.attendee_name),
     quantity: Number(r.quantity),
+    year: Number(r.year),
     createdAt: new Date(String(r.created_at)).toISOString(),
   }));
 }
@@ -389,18 +590,18 @@ async function getOrCreateStuffItemByName(nameRaw: string, categoryRaw?: string 
   return { id: String(row.id), name: String(row.name), category: row.category ?? null };
 }
 
-export async function createStuffEntry(input: { thingName: string; quantity: number; attendeeId: string; category?: string | null }): Promise<StuffEntry> {
+export async function createStuffEntry(input: { thingName: string; quantity: number; attendeeId: string; year: number; category?: string | null }): Promise<StuffEntry> {
   await ensureSchema();
   const sql = getSql();
   const item = await getOrCreateStuffItemByName(input.thingName, input.category ?? null);
   const id = nanoid();
   const qty = Math.max(1, Math.floor(Number(input.quantity)) || 1);
   const rows = await sql`
-    insert into stuff_entries (id, item_id, attendee_id, quantity)
-    values (${id}, ${item.id}, ${input.attendeeId}, ${qty})
-    returning id, quantity, created_at
+    insert into stuff_entries (id, item_id, attendee_id, year, quantity)
+    values (${id}, ${item.id}, ${input.attendeeId}, ${input.year}, ${qty})
+    returning id, quantity, year, created_at
   `;
-  const row = (rows as unknown as { id: string; quantity: number; created_at: string }[])[0];
+  const row = (rows as unknown as { id: string; quantity: number; year: number; created_at: string }[])[0];
   // Fetch attendee name
   const a = await sql`select name from attendees where id = ${input.attendeeId} limit 1`;
   const attendeeName = String((a as unknown as { name: string }[])[0]?.name || '');
@@ -412,6 +613,7 @@ export async function createStuffEntry(input: { thingName: string; quantity: num
     attendeeId: input.attendeeId,
     attendeeName,
     quantity: Number(row.quantity),
+    year: Number(row.year),
     createdAt: new Date(String(row.created_at)).toISOString(),
   };
 }
@@ -470,9 +672,20 @@ function mapPickleballGameRow(row: PickleballGameRow): PickleballGame {
   };
 }
 
-export async function listPickleballGames(): Promise<PickleballGame[]> {
+export async function listPickleballGames(year?: number): Promise<PickleballGame[]> {
   await ensureSchema();
   const sql = getSql();
+  
+  if (year !== undefined) {
+    const rows = await sql`
+      select id, date, time, location, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, team1_score, team2_score, winner, notes, created_at
+      from pickleball_games
+      where extract(year from date) = ${year}
+      order by date desc, time desc, created_at desc
+    `;
+    return (rows as unknown as PickleballGameRow[]).map(mapPickleballGameRow);
+  }
+  
   const rows = await sql`
     select id, date, time, location, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, team1_score, team2_score, winner, notes, created_at
     from pickleball_games
@@ -562,10 +775,14 @@ function mapPokerGamePlayerRow(row: PokerGamePlayerRow): PokerGamePlayer {
   };
 }
 
-export async function listPokerGames(): Promise<PokerGame[]> {
+export async function listPokerGames(year?: number): Promise<PokerGame[]> {
   await ensureSchema();
   const sql = getSql();
-  const games = (await sql`select id, date, time, status, created_at from poker_games order by date desc, time desc nulls last, created_at desc`) as unknown as PokerGameRow[];
+  
+  const games = year !== undefined
+    ? (await sql`select id, date, time, status, created_at from poker_games where extract(year from date) = ${year} order by date desc, time desc nulls last, created_at desc`) as unknown as PokerGameRow[]
+    : (await sql`select id, date, time, status, created_at from poker_games order by date desc, time desc nulls last, created_at desc`) as unknown as PokerGameRow[];
+  
   const gameIds = games.map(g => g.id);
   const players = gameIds.length
     ? ((await sql`select id, game_id, attendee_id, buy_in, cash_out, status from poker_game_players where game_id = any(${gameIds})`) as unknown as PokerGamePlayerRow[])
@@ -643,9 +860,30 @@ function mapActivityRow(row: ActivityRow): ScheduleActivity {
   };
 }
 
-export async function listActivities(): Promise<ScheduleActivity[]> {
+export async function listActivities(year?: number): Promise<ScheduleActivity[]> {
   await ensureSchema();
   const sql = getSql();
+  
+  if (year !== undefined) {
+    const rows = await sql`
+      select sa.id,
+             sa.title,
+             sa.date,
+             sa.start_time,
+             sa.end_time,
+             sa.color,
+             sa.notes,
+             sa.created_at,
+             coalesce(array_agg(saa.attendee_id) filter (where saa.attendee_id is not null), '{}'::text[]) as attendee_ids
+      from schedule_activities sa
+      left join schedule_activity_attendees saa on saa.activity_id = sa.id
+      where extract(year from sa.date) = ${year}
+      group by sa.id
+      order by sa.date asc, sa.start_time asc
+    `;
+    return (rows as unknown as ActivityRow[]).map(mapActivityRow);
+  }
+  
   const rows = await sql`
     select sa.id,
            sa.title,

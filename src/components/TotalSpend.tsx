@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { useMemo, useState } from 'react';
+import { useYear } from '@/context/YearContext';
 import type { Attendee, Expense } from '@/types';
 import { calculateTotals } from '@/lib/budget';
 
@@ -12,7 +13,8 @@ type SortField = 'name' | 'owed' | 'paid' | 'net';
 type Row = { id: string; name: string; owed: number; paid: number; net: number };
 
 export default function TotalSpend() {
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { year } = useYear();
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   const { data: expenses = [] } = useSWR<Expense[]>('/api/expenses', fetcher);
   const totals = calculateTotals(attendees, expenses);
 

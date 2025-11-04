@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { useEffect, useRef, useState } from 'react';
+import { useYear } from '@/context/YearContext';
 import type { Attendee } from '@/types';
 // Address display helper to clean and split into envelope-style lines
 function formatAddressLines(addr: string): string[] {
@@ -93,7 +94,8 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 type Suggestion = { id: string; label: string; lat: number; lng: number };
 
 export default function Attendees() {
-  const { data: attendees, mutate, isLoading } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { year } = useYear();
+  const { data: attendees, mutate, isLoading } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -153,7 +155,7 @@ export default function Attendees() {
       await fetch('/api/attendees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, startingAddress: address, arrivalDate: arrivalDate || undefined, departureDate: departureDate || undefined }),
+        body: JSON.stringify({ name, startingAddress: address, year, arrivalDate: arrivalDate || undefined, departureDate: departureDate || undefined }),
       });
       setName('');
       setAddress('');

@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { useEffect } from 'react';
+import { useYear } from '@/context/YearContext';
 import type { Attendee, Expense } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -16,7 +17,8 @@ type Transfer = {
 };
 
 export default function FinalBill() {
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { year } = useYear();
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   // Subscribe to expenses so we can revalidate settlement immediately when they change
   const { data: expenses = [] } = useSWR<Expense[]>('/api/expenses', fetcher);
   const { data, mutate } = useSWR<{ transfers: Transfer[] }>(

@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createStuffEntry, deleteStuffEntry, listStuffEntries } from '@/lib/db';
 
-export async function GET() {
-  const entries = await listStuffEntries();
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const yearParam = searchParams.get('year');
+  const year = yearParam ? parseInt(yearParam, 10) : undefined;
+  
+  const entries = await listStuffEntries(year);
   return NextResponse.json(entries);
 }
 
@@ -11,6 +15,7 @@ const CreateSchema = z.object({
   thingName: z.string().min(1).max(120),
   quantity: z.number().int().min(1).max(999),
   attendeeId: z.string().min(1),
+  year: z.number().int().min(2000).max(2100),
   category: z.string().max(80).optional(),
 });
 

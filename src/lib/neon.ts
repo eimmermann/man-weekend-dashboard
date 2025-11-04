@@ -21,6 +21,21 @@ export function ensureSchema(): Promise<void> {
       const sql = getSql();
       // Create tables if they don't exist
       // Note: using simple DDL without transactions for compatibility with serverless connections
+      
+      // App years table - stores per-year settings
+      await sql`
+        create table if not exists app_years (
+          year integer primary key,
+          airbnb_url text,
+          image_url text,
+          address text,
+          trip_start_date date,
+          trip_end_date date,
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now()
+        );
+      `;
+      
       await sql`
         create table if not exists attendees (
           id text primary key,
@@ -33,6 +48,9 @@ export function ensureSchema(): Promise<void> {
           created_at timestamptz not null default now()
         );
       `;
+      
+      // Add year column to attendees if it doesn't exist
+      await sql`alter table attendees add column if not exists year integer not null default 2025`;
 
       await sql`
         create table if not exists expenses (
@@ -94,6 +112,9 @@ export function ensureSchema(): Promise<void> {
           created_at timestamptz not null default now()
         );
       `;
+      
+      // Add year column to stuff_entries if it doesn't exist
+      await sql`alter table stuff_entries add column if not exists year integer not null default 2025`;
 
       // Pickleball games table
       await sql`
@@ -254,6 +275,24 @@ export function ensureSchema(): Promise<void> {
       } catch (migrationError) {
         // Migration failed, but continue - tables will be created on first use
         console.warn('Migration from weekend_blockers failed:', migrationError);
+      }
+      
+      // Seed app_years with 2025 data from constants if not already present
+      try {
+        await sql`
+          insert into app_years (year, airbnb_url, image_url, address, trip_start_date, trip_end_date)
+          values (
+            2025,
+            'https://www.airbnb.com/rooms/880325538027550159?viralityEntryPoint=1&s=76',
+            'https://a0.muscache.com/im/pictures/72066d46-fa14-4982-9fb9-f75ad96ac6e2.jpg?im_w=1200',
+            '15 Goldring Drive, Highland Lake, NY 12743',
+            '2025-09-10',
+            '2025-09-14'
+          )
+          on conflict (year) do nothing;
+        `;
+      } catch (seedError) {
+        console.warn('Failed to seed app_years for 2025:', seedError);
       }
     })();
   }

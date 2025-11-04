@@ -13,9 +13,13 @@ const createSchema = z.object({
   })).min(1),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const games = await listPokerGames();
+    const searchParams = req.nextUrl.searchParams;
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+    
+    const games = await listPokerGames(year);
     return NextResponse.json(games);
   } catch (e) {
     console.error('List poker games error', e);

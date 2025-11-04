@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
+import { useYear } from '@/context/YearContext';
 import type { Attendee } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function RandomPicker() {
-  const { data: attendees, isLoading } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { year } = useYear();
+  const { data: attendees, isLoading } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
   // Winner state removed from UI; highlight-only mode
   const [customName, setCustomName] = useState('');

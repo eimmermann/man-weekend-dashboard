@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import useSWR from 'swr';
+import { useYear } from '@/context/YearContext';
 import type { PickleballGame, Attendee } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -30,10 +31,11 @@ export default function PickleballTracker() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<PickleballGame | null>(null);
   const [view, setView] = useState<'games' | 'summary'>('games');
+  const { year } = useYear();
   const [sortField, setSortField] = useState<SortField>('winRate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const { data: games = [], mutate, error } = useSWR<PickleballGame[]>('/api/pickleball', fetcher);
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { data: games = [], mutate, error } = useSWR<PickleballGame[]>(`/api/pickleball?year=${year}`, fetcher);
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
 
   // Debug logging
   console.log('PickleballTracker - games:', games);

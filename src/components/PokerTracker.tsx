@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import useSWR from 'swr';
+import { useYear } from '@/context/YearContext';
 import type { Attendee } from '@/types';
 
 type PokerGame = {
@@ -16,9 +17,10 @@ type PokerGame = {
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function PokerTracker() {
+  const { year } = useYear();
   const [view, setView] = useState<'games' | 'summary' | 'bill'>('games');
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
-  const { data: games = undefined, mutate } = useSWR<PokerGame[]>('/api/poker', fetcher);
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
+  const { data: games = undefined, mutate } = useSWR<PokerGame[]>(`/api/poker?year=${year}`, fetcher);
   const { data: settlement, mutate: mutateSettlement } = useSWR<{ summary: { attendeeId: string; net: number }[]; transfers: { fromAttendeeId: string; toAttendeeId: string; amount: number }[] }>(
     '/api/poker/settlement', fetcher
   );

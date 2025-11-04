@@ -3,6 +3,7 @@
 import useSWR, { useSWRConfig } from 'swr';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useYear } from '@/context/YearContext';
 import type { Attendee, Expense } from '@/types';
 import { calculateTotals } from '@/lib/budget';
 
@@ -12,7 +13,8 @@ type SortField = 'description' | 'amount' | 'date' | 'payer';
 type SortDirection = 'asc' | 'desc';
 
 export default function Expenses() {
-  const { data: attendees = [], isLoading: loadingAttendees } = useSWR<Attendee[]>('/api/attendees', fetcher);
+  const { year } = useYear();
+  const { data: attendees = [], isLoading: loadingAttendees } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   const { data: expenses = [], mutate: mutateExpenses, isLoading: loadingExpenses } = useSWR<Expense[]>('/api/expenses', fetcher);
   const { mutate: globalMutate } = useSWRConfig();
 

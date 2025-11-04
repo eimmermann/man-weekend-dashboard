@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
+import { useYear } from '@/context/YearContext';
 import type { Attendee, StuffEntry, StuffItem } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function StuffTracker() {
-  const { data: attendees = [] } = useSWR<Attendee[]>('/api/attendees', fetcher);
-  const { data: entries = [], mutate } = useSWR<StuffEntry[]>('/api/stuff', fetcher);
+  const { year } = useYear();
+  const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
+  const { data: entries = [], mutate } = useSWR<StuffEntry[]>(`/api/stuff?year=${year}`, fetcher);
   const { data: combined = { items: [], categories: [] } as { items: StuffItem[]; categories: string[] } } = useSWR('/api/stuff/items', fetcher);
   const items = useMemo(() => (combined?.items || []) as StuffItem[], [combined]);
   const categories = useMemo(() => (combined?.categories || []) as string[], [combined]);
@@ -76,7 +78,7 @@ export default function StuffTracker() {
     await fetch('/api/stuff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ thingName, quantity: qty, attendeeId: who, category: cat || undefined }),
+      body: JSON.stringify({ thingName, quantity: qty, attendeeId: who, year, category: cat || undefined }),
     });
     setThing('');
     setQty(1);

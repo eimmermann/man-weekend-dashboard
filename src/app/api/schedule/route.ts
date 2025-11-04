@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { listActivities, createActivity } from '@/lib/db';
 
-export async function GET() {
-  const items = await listActivities();
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const yearParam = searchParams.get('year');
+  const year = yearParam ? parseInt(yearParam, 10) : undefined;
+  
+  const items = await listActivities(year);
   return NextResponse.json(items);
 }
 

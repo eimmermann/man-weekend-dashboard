@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, isWithinInterval, parseISO, startOfDay } from "date-fns";
 import { TRIP_START_ISO, TRIP_END_ISO } from "@/lib/constants";
+import { useYear } from '@/context/YearContext';
 import useSWR from 'swr';
 import type { Attendee } from '@/types';
 
@@ -24,15 +25,52 @@ const DAY_END_HOUR = 24;   // latest shown hour
 const HOUR_PX = 54;        // vertical pixel height per hour
 
 export default function Schedule() {
-  const tripStart = useMemo(() => startOfDay(parseISO(TRIP_START_ISO)), []);
-  const tripEnd = useMemo(() => startOfDay(parseISO(TRIP_END_ISO)), []);
+  const { year, currentYearSettings } = useYear();
+  
+  // Use per-year settings if available, fall back to constants
+  const tripStartIso = useMemo(() => {
+    if (currentYearSettings?.tripStartDate) {
+      return currentYearSettings.tripStartDate + 'T00:00:00';
+    }
+    return TRIP_START_ISO;
+  }, [currentYearSettings?.tripStartDate]);
+  
+  const tripEndIso = useMemo(() => {
+    if (currentYearSettings?.tripEndDate) {
+      return currentYearSettings.tripEndDate + 'T23:59:59';
+    }
+    return TRIP_END_ISO;
+  }, [currentYearSettings?.tripEndDate]);
+  
+  const tripStart = useMemo(() => {
+    try {
+      return startOfDay(parseISO(tripStartIso));
+    } catch {
+      return startOfDay(parseISO(TRIP_START_ISO));
+    }
+  }, [tripStartIso]);
+  
+  const tripEnd = useMemo(() => {
+    try {
+      return startOfDay(parseISO(tripEndIso));
+    } catch {
+      return startOfDay(parseISO(TRIP_END_ISO));
+    }
+  }, [tripEndIso]);
+  
   const days = useMemo(() => buildDays(tripStart, tripEnd), [tripStart, tripEnd]);
 
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState(() => format(tripStart, "yyyy-MM-dd"));
+  const [date, setDate] = useState(() => {
+    try {
+      return format(tripStart, "yyyy-MM-dd");
+    } catch {
+      return format(startOfDay(parseISO(TRIP_START_ISO)), "yyyy-MM-dd");
+    }
+  });
   const [start, setStart] = useState("10:00");
   const [end, setEnd] = useState("11:00");
   const [color, setColor] = useState("emerald");
@@ -52,11 +90,11 @@ export default function Schedule() {
 
   // Server persistence via API
   const fetcher = (url: string) => fetch(url).then(r => r.json());
-  const { data: serverActivities, mutate } = useSWR<Activity[] | undefined>('/api/schedule', fetcher);
+  const { data: serverActivities, mutate } = useSWR<Activity[] | undefined>(`/api/schedule?year=${year}`, fetcher);
   useEffect(() => { if (Array.isArray(serverActivities)) setActivities(serverActivities); }, [serverActivities]);
 
   // Attendees for selection
-  const { data: attendees } = useSWR<Attendee[] | undefined>('/api/attendees', fetcher);
+  const { data: attendees } = useSWR<Attendee[] | undefined>(`/api/attendees?year=${year}`, fetcher);
   const allAttendeeIds = useMemo(() => (attendees ?? []).map(a => a.id), [attendees]);
 
   const dayToActivities = useMemo(() => {
