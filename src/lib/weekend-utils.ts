@@ -68,20 +68,8 @@ export function getWeekendAvailability(blockers: WeekendBlocker[], year: number 
     };
   });
   
-  // Sort by availability: most free first (no blockers), then by blocker count ascending
-  availability.sort((a, b) => {
-    if (a.blockerCount === 0 && b.blockerCount > 0) return -1;
-    if (a.blockerCount > 0 && b.blockerCount === 0) return 1;
-    if (a.blockerCount === 0 && b.blockerCount === 0) {
-      // Both free, sort by date
-      return a.startDate.localeCompare(b.startDate);
-    }
-    // Both have blockers, sort by count ascending, then by date
-    if (a.blockerCount !== b.blockerCount) {
-      return a.blockerCount - b.blockerCount;
-    }
-    return a.startDate.localeCompare(b.startDate);
-  });
+  // Sort strictly by date so weekends remain chronological regardless of blocker status
+  availability.sort((a, b) => a.startDate.localeCompare(b.startDate));
   
   return availability;
 }
