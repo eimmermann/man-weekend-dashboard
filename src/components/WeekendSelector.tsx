@@ -15,6 +15,7 @@ export default function WeekendSelector() {
   const { data: blockers = [], mutate, error: blockersError, isLoading: loadingBlockers } = useSWR<WeekendBlocker[]>(`/api/weekend-blockers?year=${year}`, fetcher);
   const [hasMounted, setHasMounted] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createModalInitialDate, setCreateModalInitialDate] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState<WeekendBlocker | null>(null);
   const [, setSelectedWeekend] = useState<string | null>(null);
 
@@ -28,13 +29,48 @@ export default function WeekendSelector() {
 
   const attendeeById = useMemo(() => new Map(attendees.map(a => [a.id, a.name] as const)), [attendees]);
 
+  function handleWeekendCardClick(weekendStart: string) {
+    const [yearStr, monthStr, dayStr] = weekendStart.split('-');
+    const parsedYear = Number(yearStr);
+    const parsedMonth = Number(monthStr);
+    const parsedDay = Number(dayStr);
+
+    if (Number.isNaN(parsedYear) || Number.isNaN(parsedMonth) || Number.isNaN(parsedDay)) {
+      setCreateModalInitialDate(null);
+      setCreateModalOpen(true);
+      return;
+    }
+
+    const weekendStartDate = new Date(parsedYear, parsedMonth - 1, parsedDay);
+    if (Number.isNaN(weekendStartDate.getTime())) {
+      setCreateModalInitialDate(null);
+      setCreateModalOpen(true);
+      return;
+    }
+
+    const saturdayDate = new Date(weekendStartDate);
+    saturdayDate.setDate(saturdayDate.getDate() + 2);
+
+    const formatted = `${saturdayDate.getFullYear()}-${String(saturdayDate.getMonth() + 1).padStart(2, '0')}-${String(saturdayDate.getDate()).padStart(2, '0')}`;
+    setCreateModalInitialDate(formatted);
+    setCreateModalOpen(true);
+  }
+
+  function handleCloseCreateModal() {
+    setCreateModalOpen(false);
+    setCreateModalInitialDate(null);
+  }
+
   return (
     <div className="rounded-2xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 p-6 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold">Weekend Date Selection</h3>
         <button
           type="button"
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => {
+            setCreateModalInitialDate(null);
+            setCreateModalOpen(true);
+          }}
           className="rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:opacity-95 text-white font-medium px-4 py-2 text-sm"
         >
           Add Blocker
@@ -56,11 +92,20 @@ export default function WeekendSelector() {
           {availability.map((weekend) => (
             <div
               key={weekend.startDate}
+              role="button"
+              tabIndex={0}
               className={`p-3 rounded-lg transition-colors ${
                 weekend.blockerCount > 0
                   ? 'bg-red-500/10 ring-1 ring-red-500/20 hover:bg-red-500/15'
                   : 'bg-green-500/10 ring-1 ring-green-500/20 hover:bg-green-500/15'
-              }`}
+              } cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400/70`}
+              onClick={() => handleWeekendCardClick(weekend.startDate)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleWeekendCardClick(weekend.startDate);
+                }
+              }}
             >
               <div className="text-sm font-medium mb-2">{weekend.dateRange}</div>
               <div className="text-xs opacity-70 mb-2">Thu-Sun</div>
@@ -97,13 +142,15 @@ export default function WeekendSelector() {
       {/* Create Modal */}
       {createModalOpen && hasMounted && createPortal(
         <CreateBlockerModal
+          key={createModalInitialDate ?? 'no-date'}
           attendees={attendees}
-          onClose={() => setCreateModalOpen(false)}
+          initialDate={createModalInitialDate ?? undefined}
+          onClose={handleCloseCreateModal}
           onSuccess={async () => {
             console.log('onSuccess called, mutating blockers...');
             await mutate(undefined, { revalidate: true });
             console.log('Mutate completed');
-            setCreateModalOpen(false);
+            handleCloseCreateModal();
           }}
         />,
         document.body
@@ -133,11 +180,11 @@ export default function WeekendSelector() {
   );
 }
 
-function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Attendee[]; onClose: () => void; onSuccess: () => void }) {
+function CreateBlockerModal({ attendees, onClose, onSuccess, initialDate }: { attendees: Attendee[]; onClose: () => void; onSuccess: () => void; initialDate?: string }) {
   const { year } = useYear();
   const [attendeeId, setAttendeeId] = useState('');
   const [eventName, setEventName] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(initialDate ?? '');
   const [isRecurring, setIsRecurring] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +196,13 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
       setAttendeeId(attendees[0].id);
     }
   }, [attendees, attendeeId]);
+
+  useEffect(() => {
+    setSelectedDate(initialDate ?? '');
+    setError(null);
+    setShowWeekendChoice(false);
+    setPendingBlockers([]);
+  }, [initialDate]);
 
 
   // Helper function to find the Thursday of a given week (weekend start)
@@ -291,7 +345,7 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !submitting && onClose()} />
       <div
-        className="relative z-[1001] w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5"
+        className="relative z-[1001] w-[92%] max-w-md rounded-xl bg-white/5 backdrop-blur-xl ring-1 ring-white/10 shadow-xl p-5 modal-dark"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -340,7 +394,7 @@ function CreateBlockerModal({ attendees, onClose, onSuccess }: { attendees: Atte
             <label className="block text-sm mb-2 opacity-80">Date</label>
             <input
               type="date"
-              className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2 text-white [color-scheme:dark]"
+              className="w-full rounded-lg ring-1 ring-white/10 bg-transparent px-3 py-2 text-white [color-scheme:dark] date-input-white"
               value={selectedDate}
               onChange={(e) => {
                 setSelectedDate(e.target.value);

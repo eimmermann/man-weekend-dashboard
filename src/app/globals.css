@@ -104,3 +104,12 @@ body {
 .modal-dark input[type="time"]::-webkit-clear-button {
   filter: invert(1) brightness(1.4);
 }
+
+.date-input-white {
+  color: #ffffff;
+}
+
+.date-input-white::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6) contrast(1.2);
+  opacity: 1;
+}
