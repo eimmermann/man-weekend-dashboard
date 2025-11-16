@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useYear } from '@/context/YearContext';
 import { mutate } from 'swr';
@@ -13,10 +13,10 @@ type AdminYearModalProps = {
 
 export default function AdminYearModal({ onClose }: AdminYearModalProps) {
   const { year: currentYear, years, currentYearSettings } = useYear();
-  const [mode, setMode] = useState<Mode>('init');
+  const [mode, setMode] = useState<Mode>('edit');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form state
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [copyFrom, setCopyFrom] = useState<number | ''>('');
@@ -25,7 +25,18 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
   const [address, setAddress] = useState('');
   const [tripStartDate, setTripStartDate] = useState('');
   const [tripEndDate, setTripEndDate] = useState('');
-  
+
+  // Load current year settings when modal opens or currentYearSettings changes
+  useEffect(() => {
+    if (mode === 'edit' && currentYearSettings) {
+      setAirbnbUrl(currentYearSettings.airbnbUrl || '');
+      setImageUrl(currentYearSettings.imageUrl || '');
+      setAddress(currentYearSettings.address || '');
+      setTripStartDate(currentYearSettings.tripStartDate || '');
+      setTripEndDate(currentYearSettings.tripEndDate || '');
+    }
+  }, [currentYearSettings, mode]);
+
   // Update form when switching modes
   const handleModeChange = (newMode: Mode) => {
     setMode(newMode);
