@@ -8,20 +8,7 @@
   "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
     "id": 9341,
     "files": [
-      "static/chunks/341.716d46e6e5cb6bdc.js"
-    ]
-  },
-  "components\\TripMap.tsx -> leaflet": {
-    "id": 5752,
-    "files": [
-      "static/chunks/d0deef33.53a40f89e3d32118.js"
-    ]
-  },
-  "components\\TripMap.tsx -> react-leaflet": {
-    "id": 9712,
-    "files": [
-      "static/chunks/d0deef33.53a40f89e3d32118.js",
-      "static/chunks/712.c5784de0e7ff3d33.js"
+      "static/chunks/722.1676ac40a4a20207.js"
     ]
   }
 }

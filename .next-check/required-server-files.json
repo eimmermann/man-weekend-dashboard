@@ -63,6 +63,10 @@
           "protocol": "https",
           "hostname": "raw.githubusercontent.com",
           "pathname": "/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/**"
+        },
+        {
+          "protocol": "https",
+          "hostname": "*.muscache.com"
         }
       ],
       "unoptimized": false
@@ -103,7 +107,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "D:\\Workspace\\man-weekend-dashboard",
+    "outputFileTracingRoot": "d:\\Workspace\\man-weekend-dashboard",
     "experimental": {
       "useSkewCookie": false,
       "nodeMiddleware": false,
@@ -294,10 +298,10 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
     "turbopack": {
-      "root": "D:\\Workspace\\man-weekend-dashboard"
+      "root": "d:\\Workspace\\man-weekend-dashboard"
     }
   },
-  "appDir": "D:\\Workspace\\man-weekend-dashboard",
+  "appDir": "d:\\Workspace\\man-weekend-dashboard",
   "relativeAppDir": "",
   "files": [
     ".next-check\\routes-manifest.json",

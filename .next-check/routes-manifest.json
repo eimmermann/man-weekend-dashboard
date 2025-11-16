@@ -26,6 +26,30 @@
         "nxtPid": "nxtPid"
       },
       "namedRegex": "^/api/attendees/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/pickleball/[id]",
+      "regex": "^/api/pickleball/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/pickleball/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/poker/[gameId]/players",
+      "regex": "^/api/poker/([^/]+?)/players(?:/)?$",
+      "routeKeys": {
+        "nxtPgameId": "nxtPgameId"
+      },
+      "namedRegex": "^/api/poker/(?<nxtPgameId>[^/]+?)/players(?:/)?$"
+    },
+    {
+      "page": "/api/schedule/[id]",
+      "regex": "^/api/schedule/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/schedule/(?<nxtPid>[^/]+?)(?:/)?$"
     }
   ],
   "staticRoutes": [

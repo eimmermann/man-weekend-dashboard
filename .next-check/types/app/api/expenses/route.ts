@@ -1,4 +1,4 @@
-// File: D:\Workspace\man-weekend-dashboard\src\app\api\expenses\route.ts
+// File: d:\Workspace\man-weekend-dashboard\src\app\api\expenses\route.ts
 import * as entry from '../../../../../src/app/api/expenses/route.js'
 import type { NextRequest } from 'next/server.js'
 

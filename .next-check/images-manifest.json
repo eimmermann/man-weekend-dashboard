@@ -38,6 +38,11 @@
         "protocol": "https",
         "hostname": "^(?:^(?:raw\\.githubusercontent\\.com)$)$",
         "pathname": "^(?:\\/PokeAPI\\/sprites\\/master\\/sprites\\/pokemon\\/other\\/official-artwork(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
+      },
+      {
+        "protocol": "https",
+        "hostname": "^(?:(?!\\.)(?=.)[^/]*?\\.muscache\\.com\\/?)$",
+        "pathname": "^(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/?)$"
       }
     ],
     "unoptimized": false,
