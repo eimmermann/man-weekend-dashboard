@@ -1,6 +1,6 @@
 "use client";
 
-import { TRIP_START_ISO, TRIP_END_ISO, TRIP_NAME, AIRBNB_URL, HOUSE_ADDRESS } from '@/lib/constants';
+import { TRIP_START_ISO, TRIP_END_ISO, AIRBNB_URL, HOUSE_ADDRESS, HERO_IMAGE_URL } from '@/lib/constants';
 import { useYear } from '@/context/YearContext';
 import Image from 'next/image';
 import { differenceInSeconds, format } from 'date-fns';
@@ -31,37 +31,44 @@ export default function Countdown() {
 
   // Use per-year settings if available, fall back to constants
   const tripName = `Man Weekend ${year}`;
-  const airbnbUrl = currentYearSettings?.airbnbUrl || AIRBNB_URL;
-  const address = currentYearSettings?.address || HOUSE_ADDRESS;
-  const imageUrl = currentYearSettings?.imageUrl || null;
+  const rawAirbnbUrl = currentYearSettings?.airbnbUrl?.trim() || null;
+  const airbnbUrl = rawAirbnbUrl || (year === 2025 ? AIRBNB_URL : null);
+  const rawAddress = currentYearSettings?.address?.trim() || null;
+  const address = rawAddress || (year === 2025 ? HOUSE_ADDRESS : 'Address TBD');
+  const hasAddressLink = Boolean(rawAddress || (year === 2025 && HOUSE_ADDRESS));
+  const imageUrl = currentYearSettings?.imageUrl?.trim() || (year === 2025 ? HERO_IMAGE_URL : '');
+  const heroImageSrc = imageUrl || '/house-hero.jpg';
   
   const start = useMemo(() => {
     if (currentYearSettings?.tripStartDate) {
       const date = new Date(currentYearSettings.tripStartDate + 'T00:00:00');
       // Validate the date
       if (isNaN(date.getTime())) {
-        return new Date(TRIP_START_ISO);
+        return year === 2025 ? new Date(TRIP_START_ISO) : null;
       }
       return date;
     }
-    return new Date(TRIP_START_ISO);
-  }, [currentYearSettings]);
+    return year === 2025 ? new Date(TRIP_START_ISO) : null;
+  }, [currentYearSettings?.tripStartDate, year]);
   
   const end = useMemo(() => {
     if (currentYearSettings?.tripEndDate) {
       const date = new Date(currentYearSettings.tripEndDate + 'T23:59:59');
       // Validate the date
       if (isNaN(date.getTime())) {
-        return new Date(TRIP_END_ISO);
+        return year === 2025 ? new Date(TRIP_END_ISO) : null;
       }
       return date;
     }
-    return new Date(TRIP_END_ISO);
-  }, [currentYearSettings]);
-  const secsToStart = Math.max(0, differenceInSeconds(start, now));
+    return year === 2025 ? new Date(TRIP_END_ISO) : null;
+  }, [currentYearSettings?.tripEndDate, year]);
+  const secsToStart = start ? Math.max(0, differenceInSeconds(start, now)) : 0;
   // const secsToEnd = Math.max(0, differenceInSeconds(end, now));
 
   const parts = secondsToParts(secsToStart);
+  const startLabel = start ? format(start, 'MMM d, yyyy') : 'TBD';
+  const endLabel = end ? format(end, 'MMM d, yyyy') : null;
+  const dateLabel = endLabel ? `${startLabel} → ${endLabel}` : startLabel;
 
   return (
     <div className="w-full rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] bg-white/5 backdrop-blur-xl ring-1 ring-white/10 relative">
@@ -69,7 +76,7 @@ export default function Countdown() {
       <div className="relative h-40 md:h-56 w-full">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 opacity-70" />
         <Image
-          src="/house-hero.jpg"
+          src={heroImageSrc}
           alt="Trip hero"
           fill
           priority
@@ -83,33 +90,46 @@ export default function Countdown() {
           >
             {tripName}
           </h2>
-          <a
-            href={airbnbUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs md:text-sm bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap"
-          >
-            View Airbnb
-          </a>
+          {airbnbUrl ? (
+            <a
+              href={airbnbUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs md:text-sm bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap"
+            >
+              View Airbnb
+            </a>
+          ) : (
+            <span className="text-xs md:text-sm bg-white/10 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap opacity-80">
+              Airbnb TBD
+            </span>
+          )}
         </div>
       </div>
       <div className="px-6 pb-6 pt-4">
         <div className="flex flex-wrap items-center gap-2 text-slate-100">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1.5 text-xs md:text-sm">
             <span aria-hidden>📅</span>
-            {format(start, 'MMM d, yyyy')} → {format(end, 'MMM d, yyyy')}
+            {dateLabel}
           </span>
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 hover:bg-white/15 px-3 py-1.5 text-xs md:text-sm break-words"
-          >
-            <span aria-hidden>📍</span>
-            {address}
-          </a>
+          {hasAddressLink ? (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 hover:bg-white/15 px-3 py-1.5 text-xs md:text-sm break-words"
+            >
+              <span aria-hidden>📍</span>
+              {address}
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1.5 text-xs md:text-sm break-words opacity-80">
+              <span aria-hidden>📍</span>
+              {address}
+            </span>
+          )}
         </div>
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
         {['Days','Hours','Minutes','Seconds'].map((label, idx) => {
           const value = [parts.days, parts.hours, parts.minutes, parts.seconds][idx];
           return (

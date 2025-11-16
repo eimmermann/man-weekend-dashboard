@@ -43,13 +43,13 @@ function mapAppYearRow(row: AppYearRow): AppYear {
   // Helper to format dates as YYYY-MM-DD
   const formatDate = (dateValue: string | null): string | null => {
     if (!dateValue) return null;
+    const match = /^\d{4}-\d{2}-\d{2}/.exec(dateValue);
+    if (match) {
+      return match[0];
+    }
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) return null;
-    // Format as YYYY-MM-DD
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return date.toISOString().slice(0, 10);
   };
 
   return {
@@ -279,9 +279,29 @@ async function getExpenseById(expenseId: string): Promise<Expense | null> {
   return mapExpenseRow(typed[0]);
 }
 
-export async function listExpenses(): Promise<Expense[]> {
+export async function listExpenses(year?: number): Promise<Expense[]> {
   await ensureSchema();
   const sql = getSql();
+  if (year !== undefined) {
+    const rows = await sql`
+      select
+        e.id,
+        e.description,
+        (e.amount)::float8 as amount,
+        e.payer_id,
+        e.date,
+        e.created_at,
+        coalesce(array_agg(distinct eb.beneficiary_id) filter (where eb.beneficiary_id is not null), '{}'::text[]) as beneficiary_ids,
+        coalesce(jsonb_object_agg(ep.beneficiary_id, ep.paid) filter (where ep.beneficiary_id is not null), '{}'::jsonb) as paid_by
+      from expenses e
+      left join expense_beneficiaries eb on eb.expense_id = e.id
+      left join expense_paid ep on ep.expense_id = e.id
+      where e.year = ${year}
+      group by e.id
+      order by e.created_at asc
+    `;
+    return (rows as unknown as ExpenseRow[]).map(mapExpenseRow);
+  }
   const rows = await sql`
     select
       e.id,
@@ -310,10 +330,15 @@ export async function createExpense(input: { description: string; amount: number
   const date = input.date || null;
   const uniqueBeneficiaries = Array.from(new Set(input.beneficiaryIds));
 
+  const payer = await getAttendeeById(payerId);
+  if (!payer) {
+    throw new Error('Payer not found');
+  }
+
   const sql = getSql();
   await sql`
-    insert into expenses (id, description, amount, payer_id, date)
-    values (${id}, ${description}, ${amount}, ${payerId}, ${date})
+    insert into expenses (id, description, amount, payer_id, date, year)
+    values (${id}, ${description}, ${amount}, ${payerId}, ${date}, ${payer.year})
   `;
 
   // Insert beneficiaries (if any)
@@ -457,7 +482,7 @@ export async function deleteAttendee(attendeeId: string): Promise<{ ok: true } |
 async function getAttendeeById(attendeeId: string): Promise<Attendee | null> {
   const sql = getSql();
   const rows = await sql`
-    select id, name, starting_address, arrival_date, departure_date, location_lat, location_lng, created_at
+    select id, name, starting_address, year, arrival_date, departure_date, location_lat, location_lng, created_at
     from attendees where id = ${attendeeId} limit 1
   `;
   const row = (rows as unknown as AttendeeRow[])[0];

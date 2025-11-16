@@ -28,8 +28,18 @@ const UpdateFieldsSchema = z.object({
   date: z.string().date().optional(),
 });
 
-export async function GET() {
-  const expenses = await listExpenses();
+export async function GET(req: NextRequest) {
+  const yearParam = req.nextUrl.searchParams.get('year');
+  let year: number | undefined;
+  if (yearParam !== null) {
+    const parsed = Number.parseInt(yearParam, 10);
+    if (Number.isNaN(parsed)) {
+      return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
+    }
+    year = parsed;
+  }
+
+  const expenses = await listExpenses(year);
   return NextResponse.json(expenses);
 }
 

@@ -63,6 +63,15 @@ export function ensureSchema(): Promise<void> {
         );
       `;
 
+      await sql`alter table expenses add column if not exists year integer`;
+      await sql`
+        update expenses e
+        set year = a.year
+        from attendees a
+        where e.payer_id = a.id
+          and (e.year is null or e.year = 0)
+      `;
+
       await sql`
         create table if not exists expense_beneficiaries (
           expense_id text not null references expenses(id) on delete cascade,
@@ -236,23 +245,51 @@ export function ensureSchema(): Promise<void> {
         const hasTable = (tableCheck as unknown as Array<{ table_exists: boolean }>)[0]?.table_exists;
         
         if (hasTable) {
-          await sql`
-            insert into weekend_events (id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at)
-            select 
-              id,
-              attendee_id,
-              event_name,
-              coalesce(event_date, weekend_start_date) as event_date,
-              case 
-                when weekend_start_date <= coalesce(event_date, weekend_start_date) then 'after'
-                else 'before'
-              end as weekend_choice,
-              is_recurring,
-              created_at
-            from weekend_blockers
-            where not exists (select 1 from weekend_events where weekend_events.id = weekend_blockers.id)
-            on conflict do nothing;
+          const columnCheck = await sql`
+            select exists (
+              select 1
+              from information_schema.columns
+              where table_schema = 'public'
+                and table_name = 'weekend_blockers'
+                and column_name = 'event_date'
+            ) as has_event_date;
           `;
+          const hasEventDate = (columnCheck as unknown as Array<{ has_event_date: boolean }>)[0]?.has_event_date ?? false;
+
+          if (hasEventDate) {
+            await sql`
+              insert into weekend_events (id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at)
+              select 
+                id,
+                attendee_id,
+                event_name,
+                coalesce(weekend_blockers.event_date, weekend_start_date) as event_date,
+                case 
+                  when weekend_start_date <= coalesce(weekend_blockers.event_date, weekend_start_date) then 'after'
+                  else 'before'
+                end as weekend_choice,
+                is_recurring,
+                created_at
+              from weekend_blockers
+              where not exists (select 1 from weekend_events where weekend_events.id = weekend_blockers.id)
+              on conflict do nothing;
+            `;
+          } else {
+            await sql`
+              insert into weekend_events (id, attendee_id, event_name, event_date, weekend_choice, is_recurring, created_at)
+              select 
+                id,
+                attendee_id,
+                event_name,
+                weekend_start_date as event_date,
+                'after' as weekend_choice,
+                is_recurring,
+                created_at
+              from weekend_blockers
+              where not exists (select 1 from weekend_events where weekend_events.id = weekend_blockers.id)
+              on conflict do nothing;
+            `;
+          }
           
           await sql`
             insert into blocked_weekends (id, event_id, attendee_id, weekend_start_date, year, created_at)

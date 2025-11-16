@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useYear } from '@/context/YearContext';
 import type { Attendee, Expense } from '@/types';
 
@@ -19,10 +19,12 @@ type Transfer = {
 export default function FinalBill() {
   const { year } = useYear();
   const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
+  const expensesKey = useMemo(() => `/api/expenses?year=${year}`, [year]);
+  const settlementKey = useMemo(() => `/api/expenses/settlement?year=${year}`, [year]);
   // Subscribe to expenses so we can revalidate settlement immediately when they change
-  const { data: expenses = [] } = useSWR<Expense[]>('/api/expenses', fetcher);
+  const { data: expenses = [] } = useSWR<Expense[]>(expensesKey, fetcher);
   const { data, mutate } = useSWR<{ transfers: Transfer[] }>(
-    '/api/expenses/settlement',
+    settlementKey,
     fetcher,
     { refreshInterval: 15_000 }
   );
@@ -30,7 +32,7 @@ export default function FinalBill() {
   const name = (id: string) => attendees.find(a => a.id === id)?.name || 'Unknown';
 
   async function togglePaid(t: Transfer) {
-    await fetch('/api/expenses/settlement', {
+    await fetch(settlementKey, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fromAttendeeId: t.fromAttendeeId, toAttendeeId: t.toAttendeeId, amount: t.amount }),

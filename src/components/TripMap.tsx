@@ -11,14 +11,24 @@ import { APIProvider, Map, AdvancedMarker, Marker, useMap } from "@vis.gl/react-
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function TripMap() {
-  const { year } = useYear();
+  const { year, currentYearSettings } = useYear();
   const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
   const [house, setHouse] = useState<{ lat: number; lng: number } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const houseAddress = currentYearSettings?.address?.trim() || (year === 2025 ? HOUSE_ADDRESS : '');
+  const displayAddress = houseAddress || 'Address TBD';
 
   useEffect(() => {
-    geocodeHouse().then(setHouse);
-  }, []);
+    let canceled = false;
+    if (!houseAddress) {
+      setHouse(null);
+      return;
+    }
+    geocodeHouse(houseAddress).then((coords) => {
+      if (!canceled) setHouse(coords);
+    });
+    return () => { canceled = true; };
+  }, [houseAddress]);
 
   useEffect(() => {
     setMounted(true);
@@ -60,13 +70,13 @@ export default function TripMap() {
               <FitBounds bounds={bounds} />
               {house && (
                 mapId ? (
-                  <AdvancedMarker position={house} title={HOUSE_ADDRESS} zIndex={1000}>
+                  <AdvancedMarker position={house} title={displayAddress} zIndex={1000}>
                     <div style={{ fontSize: 28, lineHeight: 1, color: '#eab308', textShadow: '0 1px 2px rgba(0,0,0,.6)' }}>★</div>
                   </AdvancedMarker>
                 ) : (
                   <Marker
                     position={house}
-                    title={HOUSE_ADDRESS}
+                    title={displayAddress}
                     zIndex={1000}
                     icon={`data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
                       '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#eab308" stroke="#a16207" stroke-width="1.5"><path d="M12 2l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 8.8l6.5-.9L12 2z"/></svg>'
@@ -106,6 +116,11 @@ export default function TripMap() {
         {apiKey && !mapId && (
           <div className="absolute bottom-2 left-2 text-[11px] opacity-70 bg-white/70 dark:bg-zinc-900/70 rounded px-2 py-1">
             Tip: Set NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID for Advanced Markers.
+          </div>
+        )}
+        {!houseAddress && (
+          <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm opacity-80">
+            Set a house address in the year settings to display the destination on the map.
           </div>
         )}
       </div>

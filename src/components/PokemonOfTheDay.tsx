@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { TRIP_START_ISO } from '@/lib/constants';
 import { differenceInCalendarDays } from 'date-fns';
 import { ensurePokemonInCache, getPokemonFromCache, PokemonInfo } from '@/lib/pokemon';
+import { useYear } from '@/context/YearContext';
 
 // Info type is provided by lib/pokemon
 
@@ -26,9 +27,35 @@ function usePokemonByDex(dexNumber: number | null) {
 }
 
 export default function PokemonOfTheDay() {
-  const daysRemaining = Math.max(0, differenceInCalendarDays(new Date(TRIP_START_ISO), new Date()));
-  const adjusted = Math.max(0, daysRemaining - 1);
-  const dex = adjusted === 0 ? 25 : adjusted; // fallback to Pikachu when adjusted is 0
+  const { year, currentYearSettings } = useYear();
+
+  const tripStartDate = useMemo(() => {
+    if (currentYearSettings?.tripStartDate) {
+      const candidate = new Date(`${currentYearSettings.tripStartDate}T00:00:00`);
+      if (!Number.isNaN(candidate.getTime())) {
+        return candidate;
+      }
+    }
+    if (year === 2025) {
+      const fallback = new Date(TRIP_START_ISO);
+      if (!Number.isNaN(fallback.getTime())) {
+        return fallback;
+      }
+    }
+    return null;
+  }, [currentYearSettings?.tripStartDate, year]);
+
+  const daysRemaining = useMemo(() => {
+    if (!tripStartDate) return null;
+    return Math.max(0, differenceInCalendarDays(tripStartDate, new Date()));
+  }, [tripStartDate]);
+
+  const dex = useMemo(() => {
+    if (daysRemaining == null) return 25;
+    const adjusted = Math.max(0, daysRemaining - 1);
+    return adjusted === 0 ? 25 : adjusted;
+  }, [daysRemaining]);
+
   const poke = usePokemonByDex(dex);
 
   return (

@@ -15,7 +15,8 @@ type Row = { id: string; name: string; owed: number; paid: number; net: number }
 export default function TotalSpend() {
   const { year } = useYear();
   const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
-  const { data: expenses = [] } = useSWR<Expense[]>('/api/expenses', fetcher);
+  const expensesKey = useMemo(() => `/api/expenses?year=${year}`, [year]);
+  const { data: expenses = [] } = useSWR<Expense[]>(expensesKey, fetcher);
   const totals = calculateTotals(attendees, expenses);
 
   const [sortField, setSortField] = useState<SortField>('name');

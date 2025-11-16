@@ -75,6 +75,13 @@ export default function HomeTabs() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  const handleYearChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
+    const nextYear = Number.parseInt(event.target.value, 10);
+    if (!Number.isNaN(nextYear) && nextYear !== year) {
+      setYear(nextYear);
+    }
+  };
+
   
 
   // If no trip dates are set, only show WeekendSelector
@@ -94,7 +101,7 @@ export default function HomeTabs() {
             <span className="text-sm text-slate-300">Year:</span>
             <select
               value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
+              onChange={handleYearChange}
               className="bg-slate-800/80 text-white px-3 py-1.5 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
             >
               {years.map((y) => (
@@ -126,7 +133,7 @@ export default function HomeTabs() {
             <span className="text-xs text-slate-300">Year:</span>
             <select
               value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
+              onChange={handleYearChange}
               className="bg-slate-800/80 text-white text-sm px-2 py-1 rounded-md border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
             >
               {years.map((y) => (

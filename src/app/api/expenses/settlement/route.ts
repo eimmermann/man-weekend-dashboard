@@ -3,10 +3,20 @@ import { z } from 'zod';
 import { listAttendees, listExpenses, listSettlementStatuses, toggleSettlementStatus } from '@/lib/db';
 import { calculateTotals, computeSettlement } from '@/lib/budget';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const yearParam = req.nextUrl.searchParams.get('year');
+  let year: number | undefined;
+  if (yearParam !== null) {
+    const parsed = Number.parseInt(yearParam, 10);
+    if (Number.isNaN(parsed)) {
+      return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
+    }
+    year = parsed;
+  }
+
   const [attendees, expenses, statuses] = await Promise.all([
-    listAttendees(),
-    listExpenses(),
+    listAttendees(year),
+    listExpenses(year),
     listSettlementStatuses(),
   ]);
 
