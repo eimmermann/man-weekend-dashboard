@@ -1,8 +1,6 @@
 import type { Attendee, Expense } from '@/types';
 
 export function calculateTotals(attendees: Attendee[], expenses: Expense[]) {
-  // const attendeeById = new Map(attendees.map(a => [a.id, a] as const));
-
   const totals = {
     totalSpend: 0,
     perAttendeeOwes: new Map<string, number>(),

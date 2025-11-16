@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createWeekendEvent, deleteWeekendEvent, listWeekendBlockers, listBlockedWeekends, updateWeekendEvent } from '@/lib/db';
+import { parseYearParam } from '@/lib/api-utils';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const yearParam = searchParams.get('year');
-    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+    const year = parseYearParam(yearParam);
     // Use legacy function for backwards compatibility with UI
     const blockers = await listWeekendBlockers(year || 2026);
     return NextResponse.json(blockers);
@@ -28,26 +29,26 @@ const CreateSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
-  const parsed = CreateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
-  }
-  
   try {
+    const body = await req.json();
+    const parsed = CreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
+    }
+
     const created = await createWeekendEvent(parsed.data);
     // Return in legacy format for backwards compatibility
     const blockers = await listWeekendBlockers();
-    const matchingBlocker = blockers.find(b => 
-      b.eventDate === created.eventDate && 
+    const matchingBlocker = blockers.find(b =>
+      b.eventDate === created.eventDate &&
       b.attendeeId === created.attendeeId &&
       b.eventName === created.eventName
     );
-    
+
     if (matchingBlocker) {
       return NextResponse.json(matchingBlocker, { status: 201 });
     }
-    
+
     // Fallback: return a simplified blocker representation
     return NextResponse.json({
       id: created.id,
@@ -59,7 +60,8 @@ export async function POST(req: NextRequest) {
       createdAt: created.createdAt,
     }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to create event' }, { status: 400 });
+    console.error('Error creating weekend event:', error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to create event' }, { status: 500 });
   }
 }
 
@@ -71,36 +73,36 @@ const UpdateSchema = z.object({
 });
 
 export async function PUT(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
-  if (!id) {
-    return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-  }
-  
-  const body = await req.json().catch(() => ({}));
-  const parsed = UpdateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
-  }
-  
   try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
+
+    const body = await req.json();
+    const parsed = UpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
+    }
+
     const updated = await updateWeekendEvent(id, parsed.data);
     if (!updated) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-    
+
     // Return in legacy format for backwards compatibility
     const blockers = await listWeekendBlockers();
     const matchingBlocker = blockers.find(b => b.id === id || (
-      b.eventDate === updated.eventDate && 
+      b.eventDate === updated.eventDate &&
       b.attendeeId === updated.attendeeId &&
       b.eventName === updated.eventName
     ));
-    
+
     if (matchingBlocker) {
       return NextResponse.json(matchingBlocker);
     }
-    
+
     // Fallback
     return NextResponse.json({
       id: updated.id,
@@ -112,7 +114,8 @@ export async function PUT(req: NextRequest) {
       createdAt: updated.createdAt,
     });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to update event' }, { status: 400 });
+    console.error('Error updating weekend event:', error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to update event' }, { status: 500 });
   }
 }
 

@@ -2,16 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { listAttendees, listExpenses, listSettlementStatuses, toggleSettlementStatus } from '@/lib/db';
 import { calculateTotals, computeSettlement } from '@/lib/budget';
+import { parseYearParam } from '@/lib/api-utils';
 
 export async function GET(req: NextRequest) {
   const yearParam = req.nextUrl.searchParams.get('year');
-  let year: number | undefined;
-  if (yearParam !== null) {
-    const parsed = Number.parseInt(yearParam, 10);
-    if (Number.isNaN(parsed)) {
-      return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
-    }
-    year = parsed;
+  const year = parseYearParam(yearParam);
+  if (yearParam !== null && year === undefined) {
+    return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
   }
 
   const [attendees, expenses, statuses] = await Promise.all([
@@ -48,11 +45,16 @@ const ToggleSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
-  const parsed = ToggleSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
-  const updated = await toggleSettlementStatus(parsed.data.fromAttendeeId, parsed.data.toAttendeeId, parsed.data.amount);
-  return NextResponse.json(updated);
+  try {
+    const body = await req.json();
+    const parsed = ToggleSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
+    const updated = await toggleSettlementStatus(parsed.data.fromAttendeeId, parsed.data.toAttendeeId, parsed.data.amount);
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('Error toggling settlement status:', error);
+    return NextResponse.json({ error: 'Failed to update settlement status' }, { status: 500 });
+  }
 }
 
 

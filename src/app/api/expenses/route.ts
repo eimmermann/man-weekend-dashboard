@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createExpense, listExpenses, toggleBeneficiaryPaid, deleteExpense, setExpenseBeneficiaries, updateExpense } from '@/lib/db';
+import { parseYearParam } from '@/lib/api-utils';
 
 const CreateSchema = z.object({
   description: z.string().min(1).max(200),
@@ -30,13 +31,9 @@ const UpdateFieldsSchema = z.object({
 
 export async function GET(req: NextRequest) {
   const yearParam = req.nextUrl.searchParams.get('year');
-  let year: number | undefined;
-  if (yearParam !== null) {
-    const parsed = Number.parseInt(yearParam, 10);
-    if (Number.isNaN(parsed)) {
-      return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
-    }
-    year = parsed;
+  const year = parseYearParam(yearParam);
+  if (yearParam !== null && year === undefined) {
+    return NextResponse.json({ error: 'Invalid year' }, { status: 400 });
   }
 
   const expenses = await listExpenses(year);
@@ -44,40 +41,50 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
-  const parsed = CreateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  try {
+    const body = await req.json();
+    const parsed = CreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.issues }, { status: 400 });
+    }
+    const expense = await createExpense(parsed.data);
+    return NextResponse.json(expense, { status: 201 });
+  } catch (error) {
+    console.error('Error creating expense:', error);
+    return NextResponse.json({ error: 'Failed to create expense' }, { status: 500 });
   }
-  const expense = await createExpense(parsed.data);
-  return NextResponse.json(expense, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
-  // Toggle paid status
-  const toggle = ToggleSchema.safeParse(body);
-  if (toggle.success) {
-    const updated = await toggleBeneficiaryPaid(toggle.data.expenseId, toggle.data.beneficiaryId);
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(updated);
+  try {
+    const body = await req.json();
+    // Toggle paid status
+    const toggle = ToggleSchema.safeParse(body);
+    if (toggle.success) {
+      const updated = await toggleBeneficiaryPaid(toggle.data.expenseId, toggle.data.beneficiaryId);
+      if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return NextResponse.json(updated);
+    }
+    // Replace beneficiaries list
+    const update = UpdateBeneficiariesSchema.safeParse(body);
+    if (update.success) {
+      const updated = await setExpenseBeneficiaries(update.data.expenseId, update.data.beneficiaryIds);
+      if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return NextResponse.json(updated);
+    }
+    // Update expense fields
+    const updateFields = UpdateFieldsSchema.safeParse(body);
+    if (updateFields.success) {
+      const { expenseId, ...fields } = updateFields.data;
+      const updated = await updateExpense(expenseId, fields);
+      if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return NextResponse.json(updated);
+    }
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  } catch (error) {
+    console.error('Error updating expense:', error);
+    return NextResponse.json({ error: 'Failed to update expense' }, { status: 500 });
   }
-  // Replace beneficiaries list
-  const update = UpdateBeneficiariesSchema.safeParse(body);
-  if (update.success) {
-    const updated = await setExpenseBeneficiaries(update.data.expenseId, update.data.beneficiaryIds);
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(updated);
-  }
-  // Update expense fields
-  const updateFields = UpdateFieldsSchema.safeParse(body);
-  if (updateFields.success) {
-    const { expenseId, ...fields } = updateFields.data;
-    const updated = await updateExpense(expenseId, fields);
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(updated);
-  }
-  return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
 }
 
 export async function DELETE(req: NextRequest) {

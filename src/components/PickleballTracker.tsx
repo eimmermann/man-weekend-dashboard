@@ -37,10 +37,6 @@ export default function PickleballTracker() {
   const { data: games = [], mutate, error } = useSWR<PickleballGame[]>(`/api/pickleball?year=${year}`, fetcher);
   const { data: attendees = [] } = useSWR<Attendee[]>(`/api/attendees?year=${year}`, fetcher);
 
-  // Debug logging
-  console.log('PickleballTracker - games:', games);
-  console.log('PickleballTracker - error:', error);
-
   const [team1Player1Id, setTeam1Player1Id] = useState('');
   const [team1Player2Id, setTeam1Player2Id] = useState('');
   const [team2Player1Id, setTeam2Player1Id] = useState('');

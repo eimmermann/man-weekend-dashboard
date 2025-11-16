@@ -279,6 +279,9 @@ async function getExpenseById(expenseId: string): Promise<Expense | null> {
   return mapExpenseRow(typed[0]);
 }
 
+// AIDEV-NOTE: Year-based filtering pattern used across list functions (expenses, stuff, activities)
+// Query duplication is intentional - complex joins/aggregations make generic helpers less readable
+// Pattern: if year is defined, add WHERE clause; otherwise fetch all records
 export async function listExpenses(year?: number): Promise<Expense[]> {
   await ensureSchema();
   const sql = getSql();
@@ -1043,108 +1046,9 @@ export async function pokerSummaryByAttendee(): Promise<Array<{ attendeeId: stri
   return (rows as unknown as Array<{ attendee_id: string; net: number }>).map(r => ({ attendeeId: String(r.attendee_id), net: Number(r.net) }));
 }
 
-export function computePokerSettlement(balances: Array<{ attendeeId: string; net: number }>): Array<{ fromAttendeeId: string; toAttendeeId: string; amount: number }> {
-  // Work in integer cents to avoid floating point issues and reduce spurious transfers
-  const toCents = (n: number) => Math.round(n * 100);
-  const toDollars = (c: number) => Number((c / 100).toFixed(2));
-
-  const creditors = balances
-    .filter(b => b.net > 0)
-    .map(b => ({ id: b.attendeeId, cents: toCents(b.net) }))
-    .filter(c => c.cents > 0)
-    .sort((a, b) => b.cents - a.cents);
-
-  const debtors = balances
-    .filter(b => b.net < 0)
-    .map(b => ({ id: b.attendeeId, cents: toCents(-b.net) }))
-    .filter(d => d.cents > 0)
-    .sort((a, b) => b.cents - a.cents);
-
-  // Initial greedy to fully settle at least one side per transfer
-  type Key = string;
-  const key = (from: string, to: string): Key => `${from}->${to}`;
-  const edgeAmount: Record<Key, number> = {};
-
-  let i = 0;
-  let j = 0;
-  while (i < debtors.length && j < creditors.length) {
-    const pay = Math.min(debtors[i].cents, creditors[j].cents);
-    if (pay > 0) {
-      const k = key(debtors[i].id, creditors[j].id);
-      edgeAmount[k] = (edgeAmount[k] || 0) + pay;
-      debtors[i].cents -= pay;
-      creditors[j].cents -= pay;
-    }
-    if (debtors[i].cents === 0) i++;
-    if (creditors[j].cents === 0) j++;
-  }
-
-  // Build helper maps: for each creditor, list payers; for each debtor, list recipients
-  const rebuildIndexes = () => {
-    const creditorToPayers = new Map<string, Array<{ from: string; cents: number }>>();
-    const debtorToRecipients = new Map<string, Array<{ to: string; cents: number }>>();
-    for (const [k, cents] of Object.entries(edgeAmount)) {
-      if (cents <= 0) continue;
-      const [from, to] = k.split('->');
-      const a = creditorToPayers.get(to) || [];
-      a.push({ from, cents });
-      creditorToPayers.set(to, a);
-      const b = debtorToRecipients.get(from) || [];
-      b.push({ to, cents });
-      debtorToRecipients.set(from, b);
-    }
-    return { creditorToPayers, debtorToRecipients };
-  };
-
-  // Consolidation pass: try to reduce number of payers per creditor by swapping flows
-  let improved = true;
-  while (improved) {
-    improved = false;
-    const { creditorToPayers, debtorToRecipients } = rebuildIndexes();
-    for (const [creditor, payers] of creditorToPayers.entries()) {
-      if (payers.length <= 1) continue;
-      // primary payer: payer contributing most to this creditor
-      const primary = payers.slice().sort((a, b) => b.cents - a.cents)[0];
-      // For each secondary payer, try to shift their payment to some other creditor of the primary
-      for (const secondary of payers) {
-        if (secondary.from === primary.from) continue;
-        let remaining = secondary.cents;
-        const primRecipients = (debtorToRecipients.get(primary.from) || []).filter(r => r.to !== creditor).sort((a, b) => b.cents - a.cents);
-        for (const r of primRecipients) {
-          if (remaining <= 0) break;
-          const move = Math.min(remaining, r.cents);
-          if (move <= 0) continue;
-          // Decrease primary->r.to by move
-          const k1 = key(primary.from, r.to);
-          edgeAmount[k1] -= move;
-          if (edgeAmount[k1] <= 0) delete edgeAmount[k1];
-          // Increase secondary->r.to by move
-          const k2 = key(secondary.from, r.to);
-          edgeAmount[k2] = (edgeAmount[k2] || 0) + move;
-          // Increase primary->creditor by move
-          const k3 = key(primary.from, creditor);
-          edgeAmount[k3] = (edgeAmount[k3] || 0) + move;
-          // Decrease secondary->creditor by move
-          const k4 = key(secondary.from, creditor);
-          edgeAmount[k4] -= move;
-          if (edgeAmount[k4] <= 0) delete edgeAmount[k4];
-          remaining -= move;
-          improved = true;
-        }
-        if (!improved) continue;
-      }
-    }
-  }
-
-  // Emit transfers
-  const transfers: Array<{ fromAttendeeId: string; toAttendeeId: string; amount: number }> = [];
-  for (const [k, cents] of Object.entries(edgeAmount)) {
-    if (cents <= 0) continue;
-    const [from, to] = k.split('->');
-    transfers.push({ fromAttendeeId: from, toAttendeeId: to, amount: toDollars(cents) });
-  }
-  return transfers;
-}
+// AIDEV-NOTE: Settlement calculation now uses shared implementation from budget.ts
+// This eliminates code duplication and ensures poker and expense settlements use identical algorithm
+export { computeSettlement as computePokerSettlement } from './budget';
 
 // -----------------------
 // Weekend events and blocked weekends

@@ -49,7 +49,6 @@ export default function PokerTracker() {
     setHasMounted(true);
   }, []);
 
-  // const addRow = () => setRows(prev => [...prev, { attendeeId: attendees[0]?.id || '', buyIn: 20 }]);
   const removeRow = (idx: number) => setRows(prev => prev.filter((_, i) => i !== idx));
 
   // Auto-create a row for every attendee once attendees are loaded
@@ -91,13 +90,6 @@ export default function PokerTracker() {
   const transfers = useMemo(() => settlement?.transfers || [], [settlement]);
 
   const gamesList: PokerGame[] = Array.isArray(games) ? games : [];
-
-  // function canGameBeFinished(game: PokerGame): boolean {
-  //   const allPlayersFinished = (game.players || []).every((p) => (p as { status?: 'active' | 'finished' }).status === 'finished');
-  //   const totalNet = (game.players || []).reduce((sum: number, p) => sum + (Number((p as { cashOut: number }).cashOut) - Number((p as { buyIn: number }).buyIn)), 0);
-  //   const rounded = Math.round(totalNet * 100) / 100;
-  //   return allPlayersFinished && rounded === 0;
-  // }
 
   // Recalculate settlement when switching to Summary/Bill tabs
   useEffect(() => {
@@ -494,11 +486,4 @@ export default function PokerTracker() {
     </div>
   );
 }
-
-// function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-//   return (
-//     <button onClick={onClick} className={`px-3 py-1.5 rounded-full text-sm ${active ? 'bg-indigo-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}>{label}</button>
-//   );
-// }
-
 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createStuffEntry, deleteStuffEntry, listStuffEntries } from '@/lib/db';
+import { parseYearParam } from '@/lib/api-utils';
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const yearParam = searchParams.get('year');
-  const year = yearParam ? parseInt(yearParam, 10) : undefined;
+  const year = parseYearParam(yearParam);
   
   const entries = await listStuffEntries(year);
   return NextResponse.json(entries);

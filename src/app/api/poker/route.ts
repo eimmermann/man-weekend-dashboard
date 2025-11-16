@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { listPokerGames, createPokerGame, updatePokerGameStatus, deletePokerGame, computePokerSettlement } from '@/lib/db';
 import { createExpense, deleteExpensesByDescriptionAndDate } from '@/lib/db';
+import { parseYearParam } from '@/lib/api-utils';
 
 const createSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const yearParam = searchParams.get('year');
-    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+    const year = parseYearParam(yearParam);
     
     const games = await listPokerGames(year);
     return NextResponse.json(games);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listPickleballGames, createPickleballGame } from '@/lib/db';
+import { parseYearParam } from '@/lib/api-utils';
 import { z } from 'zod';
 
 const createGameSchema = z.object({
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const yearParam = searchParams.get('year');
-    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+    const year = parseYearParam(yearParam);
     
     const games = await listPickleballGames(year);
     return NextResponse.json(games);
@@ -33,9 +34,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = createGameSchema.parse(body);
-    
+
     const game = await createPickleballGame(validatedData);
-    return NextResponse.json(game);
+    return NextResponse.json(game, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.issues }, { status: 400 });
