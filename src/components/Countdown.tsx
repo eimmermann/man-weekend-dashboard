@@ -69,6 +69,15 @@ export default function Countdown() {
   const startLabel = start ? format(start, 'MMM d, yyyy') : 'TBD';
   const endLabel = end ? format(end, 'MMM d, yyyy') : null;
   const dateLabel = endLabel ? `${startLabel} → ${endLabel}` : startLabel;
+  const displayYear = useMemo(() => {
+    if (currentYearSettings?.tripStartDate) {
+      const parsed = new Date(currentYearSettings.tripStartDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.getFullYear();
+      }
+    }
+    return year;
+  }, [currentYearSettings?.tripStartDate, year]);
 
   const canSelectYear = years.length > 0;
   const handleYearSelect: ChangeEventHandler<HTMLSelectElement> = (event) => {
@@ -82,22 +91,6 @@ export default function Countdown() {
     <div className="w-full rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] bg-white/5 backdrop-blur-xl ring-1 ring-white/10 relative">
       {/* Hero */}
       <div className="relative h-40 md:h-56 w-full">
-        {canSelectYear && (
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-2 rounded-2xl bg-black/45 backdrop-blur-md ring-1 ring-white/20 px-3 py-1.5 text-xs text-white shadow-lg shadow-black/30">
-            <span className="uppercase tracking-wide opacity-80">Year</span>
-            <select
-              value={year}
-              onChange={handleYearSelect}
-              className="bg-white/10 border border-white/25 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              {years.map((entry) => (
-                <option key={entry.year} value={entry.year} className="text-black">
-                  {entry.year}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 opacity-70" />
         <Image
           src={heroImageSrc}
@@ -107,52 +100,73 @@ export default function Countdown() {
           sizes="100vw"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between text-white gap-3">
-          <h2
-            className="text-4xl md:text-6xl font-light md:font-normal leading-tight tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] text-transparent bg-clip-text bg-gradient-to-r from-indigo-100 via-fuchsia-100 to-pink-100"
-          >
-            {tripName}
-          </h2>
-          {airbnbUrl ? (
-            <a
-              href={airbnbUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs md:text-sm bg-white/10 hover:bg-white/20 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap"
-            >
-              View Airbnb
-            </a>
-          ) : (
-            <span className="text-xs md:text-sm bg-white/10 backdrop-blur rounded-xl ring-1 ring-white/15 px-2.5 py-1 whitespace-nowrap opacity-80">
-              Airbnb TBD
-            </span>
-          )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/40 to-black/70" />
+        <div className="absolute inset-x-0 bottom-0 px-4 pb-4">
+          <div className="flex flex-col gap-2 text-white">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.4em] text-white/80">
+                Man Weekend
+              </span>
+              {canSelectYear ? (
+                <div className="relative inline-flex items-center">
+                  <select
+                    value={year}
+                    onChange={handleYearSelect}
+                    className="text-3xl md:text-4xl font-semibold tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] bg-transparent text-white focus:outline-none appearance-none pr-6"
+                  >
+                    {years.map((entry) => (
+                      <option key={entry.year} value={entry.year} className="text-black text-base">
+                        {entry.year}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-white/70 text-lg">▾</span>
+                </div>
+              ) : (
+                <span className="text-3xl md:text-4xl font-semibold tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)]">
+                  {displayYear}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm">
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 ring-1 ring-white/20">
+                <span aria-hidden>📅</span>
+                {dateLabel}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 ring-1 ring-white/20">
+                <span aria-hidden>📍</span>
+                {address}
+              </span>
+              {airbnbUrl ? (
+                <a
+                  href={airbnbUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25 text-xs md:text-sm font-semibold hover:bg-white/25"
+                >
+                  View Airbnb
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/20 text-xs md:text-sm opacity-80">
+                  Airbnb TBD
+                </span>
+              )}
+              {hasAddressLink && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/30 px-3 py-1 text-xs md:text-sm hover:bg-white/10"
+                >
+                  Open map
+                </a>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       <div className="px-6 pb-6 pt-4">
-        <div className="flex flex-wrap items-center gap-2 text-slate-100">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1.5 text-xs md:text-sm">
-            <span aria-hidden>📅</span>
-            {dateLabel}
-          </span>
-          {hasAddressLink ? (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 hover:bg-white/15 px-3 py-1.5 text-xs md:text-sm break-words"
-            >
-              <span aria-hidden>📍</span>
-              {address}
-            </a>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1.5 text-xs md:text-sm break-words opacity-80">
-              <span aria-hidden>📍</span>
-              {address}
-            </span>
-          )}
-        </div>
+        <div className="text-xs md:text-sm uppercase tracking-[0.5em] text-slate-300">Countdown to kickoff</div>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
         {['Days','Hours','Minutes','Seconds'].map((label, idx) => {
           const value = [parts.days, parts.hours, parts.minutes, parts.seconds][idx];
