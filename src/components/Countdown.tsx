@@ -4,7 +4,7 @@ import { TRIP_START_ISO, TRIP_END_ISO, AIRBNB_URL, HOUSE_ADDRESS, HERO_IMAGE_URL
 import { useYear } from '@/context/YearContext';
 import Image from 'next/image';
 import { differenceInSeconds, format } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ChangeEventHandler } from 'react';
 
 function secondsToParts(total: number) {
   const days = Math.floor(total / (24 * 3600));
@@ -19,7 +19,7 @@ function secondsToParts(total: number) {
 export default function Countdown() {
   const [now, setNow] = useState(() => new Date());
   const [mounted, setMounted] = useState(false);
-  const { year, currentYearSettings } = useYear();
+  const { year, setYear, years, currentYearSettings } = useYear();
   
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -70,10 +70,34 @@ export default function Countdown() {
   const endLabel = end ? format(end, 'MMM d, yyyy') : null;
   const dateLabel = endLabel ? `${startLabel} → ${endLabel}` : startLabel;
 
+  const canSelectYear = years.length > 0;
+  const handleYearSelect: ChangeEventHandler<HTMLSelectElement> = (event) => {
+    const nextYear = Number(event.target.value);
+    if (!Number.isNaN(nextYear) && nextYear !== year) {
+      setYear(nextYear);
+    }
+  };
+
   return (
     <div className="w-full rounded-3xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] bg-white/5 backdrop-blur-xl ring-1 ring-white/10 relative">
       {/* Hero */}
       <div className="relative h-40 md:h-56 w-full">
+        {canSelectYear && (
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-2 rounded-2xl bg-black/45 backdrop-blur-md ring-1 ring-white/20 px-3 py-1.5 text-xs text-white shadow-lg shadow-black/30">
+            <span className="uppercase tracking-wide opacity-80">Year</span>
+            <select
+              value={year}
+              onChange={handleYearSelect}
+              className="bg-white/10 border border-white/25 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+              {years.map((entry) => (
+                <option key={entry.year} value={entry.year} className="text-black">
+                  {entry.year}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 opacity-70" />
         <Image
           src={heroImageSrc}
