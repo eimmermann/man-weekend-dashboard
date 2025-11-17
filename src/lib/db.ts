@@ -192,13 +192,20 @@ export async function createAppYear(input: CreateAppYearPayload): Promise<AppYea
   
   // Copy attendees from previous year if requested
   if (copyAttendeesFrom !== undefined) {
+    const defaultArrival = newYear.tripStartDate ?? null;
+    const defaultDeparture = newYear.tripEndDate ?? null;
+
     await sql`
-      insert into attendees (id, name, starting_address, year, created_at)
+      insert into attendees (id, name, starting_address, year, arrival_date, departure_date, location_lat, location_lng, created_at)
       select 
         id || '-' || ${year} as id,
         name,
         starting_address,
         ${year} as year,
+        ${defaultArrival} as arrival_date,
+        ${defaultDeparture} as departure_date,
+        location_lat,
+        location_lng,
         now() as created_at
       from attendees
       where year = ${copyAttendeesFrom}
