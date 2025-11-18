@@ -141,6 +141,22 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
       handleUpdateYear();
     }
   };
+
+  const handleTestWebhook = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/cron/discord-countdown', { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Webhook test failed');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while testing the webhook');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
@@ -292,21 +308,31 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
               </div>
             )}
             
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+            <div className="flex flex-col gap-3 pt-4 border-t border-slate-700">
+              <div className="flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {isSubmitting ? 'Saving...' : mode === 'init' ? 'Initialize Year' : 'Update Settings'}
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleTestWebhook}
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-emerald-400 text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              >
-                {isSubmitting ? 'Saving...' : mode === 'init' ? 'Initialize Year' : 'Update Settings'}
+                {isSubmitting ? 'Testing...' : 'Test Discord Webhook'}
               </button>
             </div>
           </form>

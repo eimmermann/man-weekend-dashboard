@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { TRIP_START_ISO } from '@/lib/constants';
 import { differenceInCalendarDays } from 'date-fns';
 import { ensurePokemonInCache, getPokemonFromCache, PokemonInfo } from '@/lib/pokemon';
+import { getCountdownDex } from '@/lib/pokemon-data';
 import { useYear } from '@/context/YearContext';
 
 // Info type is provided by lib/pokemon
@@ -50,11 +51,7 @@ export default function PokemonOfTheDay() {
     return Math.max(0, differenceInCalendarDays(tripStartDate, new Date()));
   }, [tripStartDate]);
 
-  const dex = useMemo(() => {
-    if (daysRemaining == null) return 25;
-    const adjusted = Math.max(0, daysRemaining - 1);
-    return adjusted === 0 ? 25 : adjusted;
-  }, [daysRemaining]);
+  const dex = useMemo(() => getCountdownDex(daysRemaining), [daysRemaining]);
 
   const poke = usePokemonByDex(dex);
 
@@ -87,5 +84,4 @@ export default function PokemonOfTheDay() {
 }
 
 // Flavor text comes from cache (PokeAPI) when available
-
 
