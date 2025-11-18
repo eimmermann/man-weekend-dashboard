@@ -1,5 +1,6 @@
 "use client";
 
+import type { PokemonInfo } from './pokemon-data';
 export type { PokemonInfo } from './pokemon-data';
 import { STATIC_NAMES, fetchPokemonInfo } from './pokemon-data';
 
@@ -43,4 +44,3 @@ export function getPokemonFromCache(dexNumber: number): PokemonInfo | null {
   if (STATIC_NAMES[dexNumber]) return { id: dexNumber, name: STATIC_NAMES[dexNumber] };
   return null;
 }
-

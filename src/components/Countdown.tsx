@@ -30,7 +30,6 @@ export default function Countdown() {
   }, []);
 
   // Use per-year settings if available, fall back to constants
-  const tripName = `Man Weekend ${year}`;
   const rawAirbnbUrl = currentYearSettings?.airbnbUrl?.trim() || null;
   const airbnbUrl = rawAirbnbUrl || (year === 2025 ? AIRBNB_URL : null);
   const rawAddress = currentYearSettings?.address?.trim() || null;
