@@ -2,8 +2,6 @@ name: Discord Countdown Reminder
 
 on:
   schedule:
-    # 9am Eastern during daylight time (UTC-4)
-    - cron: '0 13 * * *'
     # 9am Eastern during standard time (UTC-5)
     - cron: '0 14 * * *'
   workflow_dispatch:
@@ -11,12 +9,13 @@ on:
 jobs:
   ping-countdown-endpoint:
     runs-on: ubuntu-latest
+    environment: production
+    env:
+      PROD_BASE_URL: ${{ vars.PROD_BASE_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - name: Trigger countdown webhook
         run: |
-            curl -X POST \
-              -H "Authorization: Bearer $CRON_SECRET" \
-              "${PROD_BASE_URL}/api/cron/discord-countdown"
-        env:
-          PROD_BASE_URL: ${{ secrets.PROD_BASE_URL }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          curl -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "${PROD_BASE_URL}/api/cron/discord-countdown"
