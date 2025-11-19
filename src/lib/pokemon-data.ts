@@ -1,4 +1,5 @@
 import { SNARKY_DESCRIPTIONS } from './snarky-pokedex';
+export { SNARKY_DESCRIPTIONS };
 
 export type PokemonInfo = { id: number; name: string; flavor_text?: string };
 
