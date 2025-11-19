@@ -15,7 +15,14 @@ function calculateDaysRemaining(startDate: Date): number {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
-async function postToDiscord(payload: { content: string; embeds?: Array<{ description: string; image?: { url: string } }> }) {
+async function postToDiscord(payload: {
+  content: string;
+  embeds?: Array<{
+    title?: string;
+    description?: string;
+    image?: { url: string }
+  }>
+}) {
   const webhook = process.env.DISCORD_COUNTDOWN_WEBHOOK;
   if (!webhook) {
     throw new Error('Missing DISCORD_COUNTDOWN_WEBHOOK');
@@ -66,7 +73,8 @@ export async function POST(req: NextRequest) {
   const embeds = poke
     ? [
       {
-        description: `#${poke.id} ${poke.name.replace('-', ' ')}${poke.flavor_text ? ` — ${poke.flavor_text}` : ''}`,
+        title: `#${poke.id} ${poke.name.replace('-', ' ').toUpperCase()}`,
+        description: poke.flavor_text,
         image: {
           url: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${poke.id}.png`,
         },

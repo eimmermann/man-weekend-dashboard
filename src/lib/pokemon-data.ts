@@ -95,6 +95,6 @@ export async function fetchPokemonInfo(dexNumber: number): Promise<PokemonInfo |
 
 export function getCountdownDex(daysRemaining: number | null): number {
   if (daysRemaining == null) return 25;
-  const adjusted = Math.max(0, daysRemaining - 1);
-  return adjusted === 0 ? 25 : adjusted;
+  const capped = Math.min(365, Math.max(1, daysRemaining));
+  return capped;
 }
