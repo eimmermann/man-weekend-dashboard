@@ -12,7 +12,8 @@ function parseTripDate(date: string | null | undefined): Date | null {
 function calculateDaysRemaining(startDate: Date): number {
   const now = new Date();
   const diffMs = startDate.getTime() - now.getTime();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (diffMs <= 0) return 0;
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
 async function postToDiscord(payload: {
