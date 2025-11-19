@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { TRIP_START_ISO } from '@/lib/constants';
-import { differenceInCalendarDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 import { ensurePokemonInCache, getPokemonFromCache, PokemonInfo } from '@/lib/pokemon';
 import { getCountdownDex } from '@/lib/pokemon-data';
 import { useYear } from '@/context/YearContext';
@@ -48,7 +48,7 @@ export default function PokemonOfTheDay() {
 
   const daysRemaining = useMemo(() => {
     if (!tripStartDate) return null;
-    return Math.max(0, differenceInCalendarDays(tripStartDate, new Date()));
+    return Math.max(0, differenceInDays(tripStartDate, new Date()));
   }, [tripStartDate]);
 
   const dex = useMemo(() => getCountdownDex(daysRemaining), [daysRemaining]);
