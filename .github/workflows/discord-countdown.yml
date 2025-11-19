@@ -13,9 +13,11 @@ jobs:
     env:
       PROD_BASE_URL: ${{ vars.PROD_BASE_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
       - name: Trigger countdown webhook
         run: |
           curl -X POST \
             -H "Authorization: Bearer $CRON_SECRET" \
+            -H "x-vercel-protection-bypass: $VERCEL_BYPASS_TOKEN" \
             "${PROD_BASE_URL}/api/cron/discord-countdown"

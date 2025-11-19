@@ -20,7 +20,8 @@ async function postToDiscord(payload: {
   embeds?: Array<{
     title?: string;
     description?: string;
-    image?: { url: string }
+    image?: { url: string };
+    footer?: { text: string };
   }>
 }) {
   const webhook = process.env.DISCORD_COUNTDOWN_WEBHOOK;
@@ -63,10 +64,8 @@ export async function POST(req: NextRequest) {
   }
 
   const siteUrl = process.env.PROD_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
-  let message = `🗓️ ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} until Man Weekend ${activeYear.year}!`;
-  if (siteUrl) {
-    message += `\n🔗 ${siteUrl}`;
-  }
+  const message = `🗓️ ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} until Man Weekend ${activeYear.year}!`;
+
   const dex = getCountdownDex(daysRemaining);
   const poke = await fetchPokemonInfo(dex);
 
@@ -78,6 +77,7 @@ export async function POST(req: NextRequest) {
         image: {
           url: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${poke.id}.png`,
         },
+        ...(siteUrl && { footer: { text: siteUrl } }),
       },
     ]
     : undefined;
