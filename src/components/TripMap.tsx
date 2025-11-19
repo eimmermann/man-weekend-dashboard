@@ -25,7 +25,15 @@ export default function TripMap() {
       return;
     }
     geocodeHouse(houseAddress).then((coords) => {
-      if (!canceled) setHouse(coords);
+      if (!canceled) {
+        if (coords) {
+          setHouse(coords);
+        } else {
+          console.warn('Geocoding failed for address:', houseAddress);
+        }
+      }
+    }).catch((err) => {
+      console.error('Geocoding error:', err);
     });
     return () => { canceled = true; };
   }, [houseAddress]);
