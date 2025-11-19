@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { POST as discordCountdownHandler } from '@/app/api/cron/discord-countdown/route';
 
 export async function POST(req: NextRequest) {
     const cronSecret = process.env.CRON_SECRET;
@@ -7,16 +8,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    const baseUrl = process.env.PROD_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-
     try {
-        const response = await fetch(`${baseUrl}/api/cron/discord-countdown`, {
+        // Create a new request with the proper authorization header
+        const testRequest = new NextRequest(new URL('/api/cron/discord-countdown', req.url), {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${cronSecret}`,
-                'Content-Type': 'application/json',
             },
         });
+
+        // Call the Discord countdown handler directly
+        const response = await discordCountdownHandler(testRequest);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
