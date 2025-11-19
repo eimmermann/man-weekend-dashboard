@@ -2,17 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { listAppYears } from '@/lib/db';
 import { fetchPokemonInfo, getCountdownDex } from '@/lib/pokemon-data';
 
-const EASTERN_TZ = 'America/New_York';
-
-function getEasternHour(): string {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: EASTERN_TZ,
-    hour: '2-digit',
-    hour12: false,
-  });
-  return formatter.format(new Date());
-}
-
 function parseTripDate(date: string | null | undefined): Date | null {
   if (!date) return null;
   const parsed = new Date(`${date}T00:00:00`);
@@ -50,11 +39,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Ensure we only post once the local Eastern hour hits 09
-  if (getEasternHour() !== '09') {
-    return new NextResponse(null, { status: 204 });
-  }
-
   const years = await listAppYears();
   const activeYear = years.find(y => y.tripStartDate && y.tripEndDate) ?? years[0];
   if (!activeYear?.tripStartDate || !activeYear.tripEndDate) {
@@ -81,13 +65,13 @@ export async function POST(req: NextRequest) {
 
   const embeds = poke
     ? [
-        {
-          description: `#${poke.id} ${poke.name.replace('-', ' ')}${poke.flavor_text ? ` — ${poke.flavor_text}` : ''}`,
-          image: {
-            url: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${poke.id}.png`,
-          },
+      {
+        description: `#${poke.id} ${poke.name.replace('-', ' ')}${poke.flavor_text ? ` — ${poke.flavor_text}` : ''}`,
+        image: {
+          url: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${poke.id}.png`,
         },
-      ]
+      },
+    ]
     : undefined;
 
   await postToDiscord({ content: message, embeds });

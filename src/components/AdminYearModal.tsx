@@ -55,11 +55,11 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
       setTripEndDate('');
     }
   };
-  
+
   const handleInitYear = async () => {
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       const payload = {
         year: newYear,
@@ -72,21 +72,21 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
           tripEndDate: tripEndDate || undefined,
         },
       };
-      
+
       const response = await fetch('/api/admin/years', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to initialize year');
       }
-      
+
       // Refresh years list
       await mutate('/api/admin/years');
-      
+
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -94,11 +94,11 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleUpdateYear = async () => {
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       const payload = {
         year: currentYear,
@@ -110,21 +110,21 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
           tripEndDate: tripEndDate || undefined,
         },
       };
-      
+
       const response = await fetch('/api/admin/years', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to update year');
       }
-      
+
       // Refresh years list
       await mutate('/api/admin/years');
-      
+
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -132,7 +132,7 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'init') {
@@ -146,18 +146,19 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/cron/discord-countdown', { method: 'POST' });
+      const res = await fetch('/api/admin/test-discord', { method: 'POST' });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Webhook test failed');
       }
+      alert('Discord webhook triggered successfully! Check your Discord channel.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while testing the webhook');
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -165,34 +166,32 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
           <h2 className="text-2xl font-bold text-white mb-2">Admin: Year Management</h2>
           <p className="text-slate-400">Initialize a new year or update settings for the current year</p>
         </div>
-        
+
         <div className="p-6">
           {/* Mode selector */}
           <div className="flex gap-2 mb-6">
             <button
               type="button"
               onClick={() => handleModeChange('init')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                mode === 'init'
+              className={`px-4 py-2 rounded-lg font-medium transition ${mode === 'init'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+                }`}
             >
               Initialize New Year
             </button>
             <button
               type="button"
               onClick={() => handleModeChange('edit')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                mode === 'edit'
+              className={`px-4 py-2 rounded-lg font-medium transition ${mode === 'edit'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+                }`}
             >
               Edit Current Year ({currentYear})
             </button>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'init' && (
               <>
@@ -210,7 +209,7 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                     className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Copy Attendees From Year (Optional)
@@ -230,10 +229,10 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                 </div>
               </>
             )}
-            
+
             <div className="border-t border-slate-700 pt-4 mt-4">
               <h3 className="text-lg font-semibold text-white mb-4">Trip Settings</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -247,7 +246,7 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                     className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Image URL
@@ -260,7 +259,7 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                     className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Address
@@ -273,7 +272,7 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                     className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -286,7 +285,7 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                       className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       Trip End Date
@@ -301,13 +300,13 @@ export default function AdminYearModal({ onClose }: AdminYearModalProps) {
                 </div>
               </div>
             </div>
-            
+
             {error && (
               <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
-            
+
             <div className="flex flex-col gap-3 pt-4 border-t border-slate-700">
               <div className="flex flex-wrap justify-end gap-3">
                 <button
