@@ -1,3 +1,5 @@
+import { SNARKY_DESCRIPTIONS } from './snarky-pokedex';
+
 export type PokemonInfo = { id: number; name: string; flavor_text?: string };
 
 export const STATIC_NAMES: Record<number, string> = {
@@ -72,8 +74,12 @@ function sanitizeFlavorText(text: string | undefined): string | undefined {
 }
 
 export async function fetchPokemonInfo(dexNumber: number): Promise<PokemonInfo | null> {
-  if (dexNumber < 1 || dexNumber > 365) return null;
+  if (dexNumber < 1 || dexNumber > 500) return null;
   const seededName = STATIC_NAMES[dexNumber] || `#${dexNumber}`;
+
+  // Check for snarky description first
+  const snarkyFlavor = SNARKY_DESCRIPTIONS[dexNumber];
+
   try {
     const res = await fetch(`${API_BASE}${dexNumber}/`, { cache: 'force-cache' });
     if (!res.ok) throw new Error('http');
@@ -82,14 +88,21 @@ export async function fetchPokemonInfo(dexNumber: number): Promise<PokemonInfo |
       flavor_text_entries?: Array<{ language?: { name?: string }; flavor_text?: string }>;
     } = await res.json();
     const name = (json.names?.find(n => n.language?.name === 'en')?.name || seededName).toLowerCase();
-    const englishEntries = (json.flavor_text_entries || []).filter(e => e.language?.name === 'en');
-    const flavor = englishEntries
-      .map(entry => sanitizeFlavorText(entry.flavor_text))
-      .filter(Boolean)
-      .sort((a, b) => (b!.length - a!.length))[0];
+
+    // Use snarky flavor if available, otherwise fallback to API
+    let flavor = snarkyFlavor;
+
+    if (!flavor) {
+      const englishEntries = (json.flavor_text_entries || []).filter(e => e.language?.name === 'en');
+      flavor = englishEntries
+        .map(entry => sanitizeFlavorText(entry.flavor_text))
+        .filter(Boolean)
+        .sort((a, b) => (b!.length - a!.length))[0];
+    }
+
     return { id: dexNumber, name, flavor_text: flavor };
   } catch {
-    return { id: dexNumber, name: seededName };
+    return { id: dexNumber, name: seededName, flavor_text: snarkyFlavor };
   }
 }
 
