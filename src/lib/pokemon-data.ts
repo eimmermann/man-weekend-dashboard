@@ -90,7 +90,7 @@ export async function fetchPokemonInfo(dexNumber: number): Promise<PokemonInfo |
     const name = (json.names?.find(n => n.language?.name === 'en')?.name || seededName).toLowerCase();
 
     // Use snarky flavor if available, otherwise fallback to API
-    let flavor = snarkyFlavor;
+    let flavor: string | undefined = snarkyFlavor;
 
     if (!flavor) {
       const englishEntries = (json.flavor_text_entries || []).filter(e => e.language?.name === 'en');

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { POST } from '@/app/api/cron/discord-countdown/route';
 import { NextRequest } from 'next/server';
 
@@ -43,7 +43,7 @@ describe('Discord Countdown API', () => {
 
     it('should return 204 when no active year with trip dates exists', async () => {
         const { listAppYears } = await import('@/lib/db');
-        (listAppYears as any).mockResolvedValue([
+        (listAppYears as Mock).mockResolvedValue([
             { year: 2024, tripStartDate: null, tripEndDate: null },
         ]);
 
@@ -64,7 +64,7 @@ describe('Discord Countdown API', () => {
         pastDate.setDate(pastDate.getDate() - 10);
         const pastDateStr = pastDate.toISOString().split('T')[0];
 
-        (listAppYears as any).mockResolvedValue([
+        (listAppYears as Mock).mockResolvedValue([
             {
                 year: 2024,
                 tripStartDate: pastDateStr,
@@ -91,7 +91,7 @@ describe('Discord Countdown API', () => {
         futureDate.setDate(futureDate.getDate() + 30);
         const futureDateStr = futureDate.toISOString().split('T')[0];
 
-        (listAppYears as any).mockResolvedValue([
+        (listAppYears as Mock).mockResolvedValue([
             {
                 year: 2025,
                 tripStartDate: futureDateStr,
@@ -99,8 +99,8 @@ describe('Discord Countdown API', () => {
             },
         ]);
 
-        (getCountdownDex as any).mockReturnValue(25);
-        (fetchPokemonInfo as any).mockResolvedValue({
+        (getCountdownDex as Mock).mockReturnValue(25);
+        (fetchPokemonInfo as Mock).mockResolvedValue({
             id: 25,
             name: 'pikachu',
             flavor_text: 'When several of these Pokémon gather, their electricity could build and cause lightning storms.',
@@ -134,7 +134,7 @@ describe('Discord Countdown API', () => {
         delete process.env.CRON_SECRET;
 
         const { listAppYears } = await import('@/lib/db');
-        (listAppYears as any).mockResolvedValue([
+        (listAppYears as Mock).mockResolvedValue([
             { year: 2024, tripStartDate: null, tripEndDate: null },
         ]);
 
