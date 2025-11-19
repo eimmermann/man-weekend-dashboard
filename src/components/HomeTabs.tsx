@@ -27,22 +27,22 @@ export default function HomeTabs() {
   const searchParams = useSearchParams();
   const { year, setYear, years, currentYearSettings, isLoading } = useYear();
   const [showAdminModal, setShowAdminModal] = useState(false);
-  
+
   // Only force the weekend picker when we know the current year settings and dates are missing
   const shouldShowWeekendPicker = useMemo(() => {
     if (isLoading || !currentYearSettings) return false;
     return !(currentYearSettings.tripStartDate && currentYearSettings.tripEndDate);
   }, [currentYearSettings, isLoading]);
-  
-  // Add keyboard shortcut for admin modal (Ctrl+Alt+S)
+
+  // Add keyboard shortcut for admin modal (Ctrl+/ or Cmd+/)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.altKey && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         e.preventDefault();
         setShowAdminModal(true);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -83,7 +83,7 @@ export default function HomeTabs() {
     }
   };
 
-  
+
 
   // If no trip dates are set, only show WeekendSelector
   if (shouldShowWeekendPicker) {
@@ -109,9 +109,9 @@ export default function HomeTabs() {
             </select>
           </div>
         </div>
-        
+
         <WeekendSelector />
-        
+
         {showAdminModal && <AdminYearModal onClose={() => setShowAdminModal(false)} />}
       </div>
     );
@@ -170,7 +170,7 @@ export default function HomeTabs() {
           <FinalBill />
         </div>
       )}
-      
+
       {showAdminModal && <AdminYearModal onClose={() => setShowAdminModal(false)} />}
     </div>
   );
@@ -181,11 +181,10 @@ function TabButton({ label, icon, active, onClick }: { label: string; icon: stri
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex items-center justify-center rounded-full transition-all ${
-        active
+      className={`relative flex items-center justify-center rounded-full transition-all ${active
           ? 'w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg'
           : 'w-9 h-9 md:w-auto md:h-auto md:px-3 md:py-1.5 text-slate-100 hover:bg-white/10'
-      }`}
+        }`}
       aria-current={active ? 'page' : undefined}
       aria-label={label}
       title={label}
